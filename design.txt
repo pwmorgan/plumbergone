@@ -1,2 +1,29 @@
 Plumbergone
 
+Synopsis
+Plumbergone is a simple arcade game created in Python in the vein of old school games like Tron and Pipe Dream.  This will serve as my introduction to the world of game design and a chance to flex my programming skills in a direction they previously have not explored.
+
+Story
+The general theme is a world in which the plumbers have left on adventures, leaving contractors to fill their role.  The contractors work for corrupt companies that charge both by the time taken to lay pipes and the amount of pipes laid, making the most inefficient contractors the highest paid.  You play as one of those contractors, laying labyrinthine pipes in order to make enough money to take a vacation.
+
+Graphics and Artistic Style
+Royce McLean is the artist on the game and I'm giving him artistic freedom on the style of the art.  The feel of the world should be corrupt but vaguely reminiscent of a Super Nintendo game, since its story parodies the nonsensical and wondrous worlds of the SNES's most famous games. 
+
+Gameplay
+The gameplay focuses on a single dot you control.  That dot moves in one direction at a constant speed, allowing you to pin point where you want to lay pipes.  This will be the initial implementation, but may change depending on how fun or challenging this gameplay is.
+
+First implementation:
+Create a playable 1024x768 game where you control a black dot and make it move like an etch-a-sketch across a grid.  As it exits each grid, fill-in a square.  If you run into a previously filled square, your track ends.  If both players reach an end, the game ends the level.
+
+Final Implementation:
+- Start screen.
+- Professional art.
+- Multiple levels per match.
+- Scoring system.
+
+Stretch Goals:
+Add interesting game play elements:
+- The ability to interact with previous levels of pipes.
+- Transparency to see pipe layer below if you can switch layers.
+- Power-ups
+- 
