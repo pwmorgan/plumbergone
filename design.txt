@@ -13,7 +13,7 @@ Gameplay
 The gameplay focuses on a single dot you control.  That dot moves in one direction at a constant speed, allowing you to pin point where you want to lay pipes.  This will be the initial implementation, but may change depending on how fun or challenging this gameplay is.
 
 First implementation:
-Create a playable 1024x768 game where you control a black dot and make it move like an etch-a-sketch across a grid.  As it exits each grid, fill-in a square.  If you run into a previously filled square, your track ends.  If both players reach an end, the game ends the level.
+Create a playable 1024x768 game where you control a black dot and make it move like an etch-a-sketch across a grid.  As it exits each grid, fills-in a square.  If you run into a previously filled square, your track ends.  If both players reach an end, the game ends the level.
 
 Final Implementation:
 - Start screen.
@@ -21,9 +21,22 @@ Final Implementation:
 - Multiple levels per match.
 - Scoring system.
 
+Timeline:
+Week 1: Choose the framework
+Week 2: Work on first implementation
+Week 3: Finish first implementation
+Week 4: Add feature 1
+Week 5: Add feature 2
+Week 6: Add feature 3
+Week 7: Add feature 4
+Week 8: Stretch Goals
+Week 9: Project Clean up
+Week 10: Present Project
+
 Stretch Goals:
 Add interesting game play elements:
 - The ability to interact with previous levels of pipes.
 - Transparency to see pipe layer below if you can switch layers.
 - Power-ups
-- 
+- Good sound and music.
+- Moving parts.
