@@ -40,3 +40,4 @@ Add interesting game play elements:
 - Power-ups
 - Good sound and music.
 - Moving parts.
+- Artificial intelligence
