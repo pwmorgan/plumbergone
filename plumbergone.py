@@ -248,5 +248,6 @@ while mainloop:
 		screen.blit(players.image, players.rect)
 	pygame.display.flip()  
 	
+	screen.fill(white)
 	dirty = pipes.draw(screen)
 	pygame.display.update(dirty)
