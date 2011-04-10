@@ -1,13 +1,16 @@
 import pygame
+import os
 import sys
 from copy import deepcopy
 from pygame.locals import *
 
 #Global Game Settings
+main_dir = os.path.split(os.path.abspath(__file__))[0]
 width = 1024
 height = 512
 size = width, height
 white = 255, 255, 255
+black = 0, 0, 0
 clock = pygame.time.Clock()
 mainloop = True
 FPS = 60
@@ -17,11 +20,9 @@ playtime = 0
 cell_size = 35 #pixels
 borderx = (width % cell_size) / 2 + cell_size
 bordery = (height % cell_size) / 2 + cell_size
-cellsx = width / cell_size
-cellsy = height / cell_size
 cell_count_x = (width - (2 * borderx)) / cell_size
 cell_count_y = (height - (2 * bordery)) / cell_size
-	
+
 class gameboard():
 	def __init__(self, x, y):
 		self.grid = []
@@ -34,6 +35,11 @@ class gameboard():
 			self.grid.append([])
 			for column in range(x):
 				self.grid[row].append(0)
+	
+	def pos(self, row, column):
+		x = borderx + column * cell_size
+		y = bordery + row * cell_size
+		return x, y
 
 	def row(self, y):
 		return int((y - bordery) / cell_size)
@@ -43,6 +49,7 @@ class gameboard():
 
 	def add_pipe(self, player, column, row, entry, exit):
 		self.grid[row][column] = [player, entry+exit]
+		Pipe(self.pos(row, column))
 		#print player, column, row, entry+exit
 				
 	def collision(self, x, y):
@@ -68,6 +75,12 @@ class gameboard():
 board = gameboard(cell_count_x, cell_count_y)
 
 #Image files
+def load_image(image):
+	"""Load the image and convert it to a surface."""
+	image = os.path.join(main_dir, 'media', image)
+	surface = pygame.image.load(image)
+	return surface.convert()
+
 player_image = "media/player.bmp"
 pipe_image = "media/pipe.bmp"
 
@@ -77,6 +90,8 @@ class player():
 	def __init__(self, number, x, y, image):
 		self.number = number
 		self.image = pygame.image.load(image)
+		self.image = pygame.Surface.convert(self.image)
+		self.image.set_colorkey(white)
 
 		#Screen placement
 		self.rect = self.image.get_rect()
@@ -100,10 +115,12 @@ class player():
 		self.rect.centery = self.y
 
 	def movement(self, direction):
+		"""Calculates the x and y directional velocities."""
 		self.velocity[0] = self.speed * direction[0]
 		self.velocity[1] = self.speed * direction[1]
 
 	def status(self):
+		"""Status checks the column and rows for changes, then places pipes."""
 		self.current_column = board.column(self.x)
 		self.current_row = board.row(self.y)
 
@@ -141,9 +158,22 @@ class player():
 							   self.previous_entry)
 				self.previous_row = self.current_row
 
-class pipes():
+class Pipe(pygame.sprite.Sprite):
+	images = []
+	def __init__(self, pos):
+		pygame.sprite.Sprite.__init__(self, self.containers)
+		self.image = self.images[0]
+		self.rect = self.image.get_rect(topleft=pos)
+		#print "New pipe at", pos[0], pos[1]
+"""
+class Score(pygame.sprite.Sprite):
 	def __init__(self):
-		pass
+		pygame.sprite.Sprite.__init__(self)
+		self.font = pygame.font.Font(None, 20)
+		self.color = black
+		self.update()
+		self.rect = self.image.get_rect().move(0, 0)
+"""
 
 #Establish players and starting positions
 startx1 = borderx + (cell_size / 2)
@@ -152,6 +182,7 @@ startx2 = width - startx1
 starty2 = height - starty1
 player1 = player(1, startx1, starty1, player_image)
 player2 = player(2, startx2, starty2, player_image)
+playerlist = [player1, player2]
 
 #Control Scheme
 player1.up = K_UP
@@ -163,6 +194,21 @@ player2.up = K_w
 player2.down = K_s
 player2.left = K_a
 player2.right = K_d
+
+def main():
+	"""
+	pygame.init()
+	"""
+	pass
+
+screen.fill(white)
+
+Pipe.images = [load_image('pipe.bmp')]
+
+pipes = pygame.sprite.Group()
+all = pygame.sprite.Group()
+
+Pipe.containers = pipes, all
 
 while mainloop:
     #Calculate time.
@@ -176,7 +222,7 @@ while mainloop:
 			sys.exit()
 		if event.type == pygame.KEYDOWN:
 			keystate = pygame.key.get_pressed()
-			for players in [player1, player2]:
+			for players in playerlist:
 				if keystate[players.up]:
 					players.movement([0, -1])
 				elif keystate[players.down]:
@@ -190,10 +236,9 @@ while mainloop:
 
 	#Display FPS
 	pygame.display.set_caption("[FPS]: %.2f" % clock.get_fps())
-	screen.fill(white)
 
 	#Calculate player movement
-	for players in [player1, player2]:
+	for players in playerlist:
 		if not board.collision(int(players.x), int(players.y)):
 			players.x += players.velocity[0] * seconds
 			players.y += players.velocity[1] * seconds
@@ -202,3 +247,6 @@ while mainloop:
 		players.status()
 		screen.blit(players.image, players.rect)
 	pygame.display.flip()  
+	
+	dirty = pipes.draw(screen)
+	pygame.display.update(dirty)
