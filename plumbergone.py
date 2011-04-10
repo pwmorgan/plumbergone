@@ -1,5 +1,6 @@
 import pygame
 import sys
+from copy import deepcopy
 from pygame.locals import *
 
 #Global Game Settings
@@ -29,43 +30,42 @@ class gameboard():
 		self.lowest = []
 
 	def new(self, x, y):
-		for row in range(x):
+		for row in range(y):
 			self.grid.append([])
-			for column in range(y):
+			for column in range(x):
 				self.grid[row].append(0)
 
-	def add_pipe(self, player, x, y):
-		row = (x - borderx) / cell_size
-		column = (y - bordery) / cell_size
-		self.grid[row][column] = player.number
+	def row(self, y):
+		return int((y - bordery) / cell_size)
+
+	def column(self, x):
+		return int((x - borderx) / cell_size)
+
+	def add_pipe(self, player, column, row, entry, exit):
+		self.grid[row][column] = [player, entry+exit]
+		#print player, column, row, entry+exit
 				
 	def collision(self, x, y):
 		row = (x - borderx) / cell_size
 		column = (y - bordery) / cell_size
-		if row < 0:
+		if column < 0:
 			return True
-		elif column < 0:
+		elif row < 0:
 			return True
-		elif row >= len(self.grid):
+		elif column >= len(self.grid):
 			return True
-		elif column >= len(self.grid[row]):
+		elif row >= len(self.grid[column]):
 			return True
-		if self.grid[row][column] != 0:
+		if self.grid[column][row] != 0:
 			return True
 		else:
 		   	return False
                        
-board = gameboard(cell_count_x, cell_count_y)
-
-def collision_check(player, width, height):
-	if 0 < player.rect.centerx < width:
-		if 0 < player.rect.centery < height:
-			return False
-	return True        
-
 	def store(self):
-		gameboard.lowest = gameboard.previous[0:]
-		gameboard.previous = gameboard.grid[0:]
+		gameboard.lowest = deepcopy(gameboard.previous)
+		gameboard.previous = deepcopy(gameboard.grid)
+
+board = gameboard(cell_count_x, cell_count_y)
 
 #Image files
 player_image = "media/player.bmp"
@@ -77,6 +77,8 @@ class player():
 	def __init__(self, number, x, y, image):
 		self.number = number
 		self.image = pygame.image.load(image)
+
+		#Screen placement
 		self.rect = self.image.get_rect()
 		self.rect.centerx = x
 		self.rect.centery = y
@@ -84,7 +86,14 @@ class player():
 		self.y = y
 		self.velocity = [0, 0]
 		self.speed = 85 #pixels a second
-		
+
+		#Grid placement
+		self.entry = "center"
+		self.previous_column = board.column(self.x)
+		self.previous_row = board.row(self.y)
+		self.current_column = self.previous_column
+		self.current_row = self.previous_row
+
 	def reset(self):
 		self.velocity = [0, 0]
 		self.rect.centerx = self.x
@@ -93,6 +102,44 @@ class player():
 	def movement(self, direction):
 		self.velocity[0] = self.speed * direction[0]
 		self.velocity[1] = self.speed * direction[1]
+
+	def status(self):
+		self.current_column = board.column(self.x)
+		self.current_row = board.row(self.y)
+
+		if self.previous_column != self.current_column:
+			#print "column", self.number, self.previous_column, self.current_column
+			if self.previous_column > self.current_column:
+				self.previous_entry = self.entry
+				self.entry = 'right'
+				board.add_pipe(self.number, self.previous_column,
+							   self.current_row, self.entry, 
+							   self.previous_entry)
+				self.previous_column = self.current_column
+			else:
+				self.previous_entry = self.entry
+				self.entry = 'left'
+				board.add_pipe(self.number, self.previous_column,
+							   self.current_row, self.entry, 
+							   self.previous_entry)
+				self.previous_column = self.current_column
+
+		if self.previous_row != self.current_row:
+			#print "row", self.number, self.previous_row, self.current_row
+			if self.previous_row > self.current_row:
+				self.previous_entry = self.entry
+				self.entry = 'down'
+				board.add_pipe(self.number, self.current_column,
+							   self.previous_row, self.entry, 
+							   self.previous_entry)
+				self.previous_row = self.current_row
+			else:
+				self.previous_entry = self.entry
+				self.entry = 'up'
+				board.add_pipe(self.number, self.current_column,
+							   self.previous_row, self.entry, 
+							   self.previous_entry)
+				self.previous_row = self.current_row
 
 class pipes():
 	def __init__(self):
@@ -138,6 +185,8 @@ while mainloop:
 					players.movement([1, 0])
 				elif keystate[players.left]:
 					players.movement([-1, 0])
+			if keystate[K_g]:
+				print board.grid
 
 	#Display FPS
 	pygame.display.set_caption("[FPS]: %.2f" % clock.get_fps())
@@ -150,6 +199,6 @@ while mainloop:
 			players.y += players.velocity[1] * seconds
 			players.rect.centerx = players.x
 			players.rect.centery = players.y
+		players.status()
 		screen.blit(players.image, players.rect)
-
 	pygame.display.flip()  
