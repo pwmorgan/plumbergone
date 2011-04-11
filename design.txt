@@ -41,3 +41,6 @@ Add interesting game play elements:
 - Good sound and music.
 - Moving parts.
 - Artificial intelligence
+
+NOTES:
+I could add awareness to the add_pipe function that looks where the pipe is leading and if it is leading into a trap, send the pipe upwards instead.

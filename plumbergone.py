@@ -53,9 +53,10 @@ class gameboard():
 	def column(self, x):
 		return int((x - borderx) / cell_size)
 
-	def add_pipe(self, player, column, row, entry, exit):
+	def add_pipe(self, player, style, column, row, entry, exit):
 		self.grid[row][column] = [player, entry+exit]
-		Pipe(self.pos(row, column), entry+exit)
+		Pipe(self.pos(row, column), style, entry+exit)
+		print "Added", entry+exit, "pipe for player", player, "at", column, row
 		#player.lastpipe = (row, column)
 		#print player, column, row, entry+exit
 				
@@ -87,23 +88,21 @@ def load_image(image):
 	image = os.path.join(main_dir, 'media', image)
 	surface = pygame.image.load(image)
 	surface = surface.convert()
-	#surface.set_colorkey(white)
+	surface.set_colorkey(white)
 	return surface
 
 def load_pipes(style, direction, filetype):
 	image = "pipes" + "_" + style + "_" + direction + "." + filetype
 	return load_image(image)
 
-#screen = pygame.display.set_mode(size)
-
 class player():
-	def __init__(self, number, x, y, image, previous_entry):
+	def __init__(self, number, style, x, y, image, previous_entry):
 		self.number = number
-		#self.image = pygame.image.load(image)
-		#self.image = pygame.Surface.convert(self.image)
+		self.style = style
+		self.lock = False #prevents movement and pipe creation
+
 		self.image = load_image(image)
 		self.image.set_colorkey(white)
-		self.lastpipe = False
 
 		#Screen placement
 		self.rect = self.image.get_rect()
@@ -115,12 +114,13 @@ class player():
 		self.speed = 85 #pixels a second
 
 		#Grid placement
-		self.entry = "center"
+		self.entry = previous_entry
 		self.previous_entry = previous_entry
 		self.previous_column = board.column(self.x)
 		self.previous_row = board.row(self.y)
 		self.current_column = self.previous_column
 		self.current_row = self.previous_row
+		self.lastpipe = False
 
 	def reset(self):
 		self.velocity = [0, 0]
@@ -135,7 +135,7 @@ class player():
 	def change_grid(self, direction, column, row):
 		self.previous_entry = self.entry
 		self.entry = direction
-		board.add_pipe(self.number, column,
+		board.add_pipe(self.number, self.style, column,
 		   			   row, self.previous_entry, 
 		   			   self.entry)
 		self.lastpipe = (column, row)
@@ -153,7 +153,7 @@ class player():
 			else:
 				self.lastpipe = (self.current_column, self.current_row)
 			self.entry = 'center'
-			board.add_pipe(self.number, self.lastpipe[0],
+			board.add_pipe(self.number, self.style, self.lastpipe[0],
 						   self.lastpipe[1], self.previous_entry,
 						   self.entry)
 
@@ -172,14 +172,12 @@ class player():
 
 class Pipe(pygame.sprite.Sprite):
 	images = {}
-	def __init__(self, pos, direction):
+	def __init__(self, pos, style, direction):
 		pygame.sprite.Sprite.__init__(self, self.containers)
-		self.image = self.images[direction]
+		self.image = self.images[style][direction]
 		self.rect = self.image.get_rect(topleft=pos)
 		#print "New pipe at", pos[0], pos[1]
 
-"""
-	
 class Score(pygame.sprite.Sprite):
 	def __init__(self):
 		pygame.sprite.Sprite.__init__(self)
@@ -187,7 +185,6 @@ class Score(pygame.sprite.Sprite):
 		self.color = black
 		self.update()
 		self.rect = self.image.get_rect().move(0, 0)
-"""
 
 def main():
 	"""
@@ -203,8 +200,8 @@ startx1 = borderx + (cell_size / 2)
 starty1 = bordery + (cell_size / 2)
 startx2 = width - startx1
 starty2 = height - starty1
-player1 = player(1, startx1, starty1, player_image, 'left')
-player2 = player(2, startx2, starty2, player_image, 'right')
+player1 = player(1, '1', startx1, starty1, player_image, 'left')
+player2 = player(2, '2', startx2, starty2, player_image, 'right')
 playerlist = [player1, player2]
 
 #Control Scheme
@@ -219,15 +216,16 @@ player2.left = K_a
 player2.right = K_d
 
 #def load_pipes(style, direction, filetype):
-pipe_styles = ['1',]
+pipe_styles = ['1', '2']
 
 for style in pipe_styles:
+	Pipe.images[style] = {}
 	for pipe_type in image_list:
-		Pipe.images[pipe_type] = load_pipes(style, pipe_type, 'png')
-secondary = other_images.keys()
+		Pipe.images[style][pipe_type] = load_pipes(style, pipe_type, 'png')
 
-for key in secondary:
-	Pipe.images[key] = Pipe.images[other_images[key]]
+	secondary = other_images.keys()
+	for key in secondary:
+		Pipe.images[style][key] = Pipe.images[style][other_images[key]]
 
 pipes = pygame.sprite.Group()
 all = pygame.sprite.Group()
@@ -263,16 +261,17 @@ while mainloop:
 
 	#Calculate player movement
 	for players in playerlist:
-		collision = False
-		if not board.collision(int(players.x), int(players.y)):
-			players.x += players.velocity[0] * seconds
-			players.y += players.velocity[1] * seconds
-			players.rect.centerx = players.x
-			players.rect.centery = players.y
-			screen.blit(players.image, players.rect)
-		else:
-			collision = True
-		players.status(collision)
+		if players.lock == False:
+			collision = False
+			if not board.collision(int(players.x), int(players.y)):
+				players.x += players.velocity[0] * seconds
+				players.y += players.velocity[1] * seconds
+				players.rect.centerx = players.x
+				players.rect.centery = players.y
+				screen.blit(players.image, players.rect)
+			else:
+				collision = True
+			players.status(collision)
 		#screen.blit(players.image, players.rect)
 	pygame.display.flip()  
 	
