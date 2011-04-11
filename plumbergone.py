@@ -60,17 +60,17 @@ class gameboard():
 		#print player, column, row, entry+exit
 				
 	def collision(self, x, y):
-		row = (x - borderx) / cell_size
-		column = (y - bordery) / cell_size
+		row = (y - bordery) / cell_size
+		column = (x - borderx) / cell_size
 		if column < 0:
 			return True
 		elif row < 0:
 			return True
-		elif column >= len(self.grid):
+		elif row >= len(self.grid):
 			return True
-		elif row >= len(self.grid[column]):
+		elif column >= len(self.grid[row]):
 			return True
-		if self.grid[column][row] != 0:
+		if self.grid[row][column] != 0:
 			return True
 		else:
 		   	return False
@@ -86,7 +86,9 @@ def load_image(image):
 	"""Load the image and convert it to a surface."""
 	image = os.path.join(main_dir, 'media', image)
 	surface = pygame.image.load(image)
-	return surface.convert()
+	surface = surface.convert()
+	#surface.set_colorkey(white)
+	return surface
 
 def load_pipes(style, direction, filetype):
 	image = "pipes" + "_" + style + "_" + direction + "." + filetype
@@ -101,6 +103,7 @@ class player():
 		#self.image = pygame.Surface.convert(self.image)
 		self.image = load_image(image)
 		self.image.set_colorkey(white)
+		self.lastpipe = False
 
 		#Screen placement
 		self.rect = self.image.get_rect()
@@ -215,15 +218,12 @@ player2.down = K_s
 player2.left = K_a
 player2.right = K_d
 
-screen.fill(white)
-
 #def load_pipes(style, direction, filetype):
 pipe_styles = ['1',]
 
 for style in pipe_styles:
 	for pipe_type in image_list:
 		Pipe.images[pipe_type] = load_pipes(style, pipe_type, 'png')
-        #Pipe.images[pipe_type].set_colorkey(white)
 secondary = other_images.keys()
 
 for key in secondary:
