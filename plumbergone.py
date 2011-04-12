@@ -54,9 +54,15 @@ class gameboard():
 		return int((x - borderx) / cell_size)
 
 	def add_pipe(self, player, style, column, row, entry, exit):
+		next_grid = {'up':(0,1), 'down':(0,-1), 'left':(1,0), 'right':(-1,0), 'center':(0,0)}
+		try:
+			if self.grid[row + next_grid[exit][1]][column + next_grid[exit][0]] != 0:
+				exit = 'center'
+		except IndexError:
+				exit = 'center'
 		self.grid[row][column] = [player, entry+exit]
 		Pipe(self.pos(row, column), style, entry+exit)
-		print "Added", entry+exit, "pipe for player", player, "at", column, row
+		#print "Added", entry+exit, "pipe for player", player, "at", column, row
 		#player.lastpipe = (row, column)
 		#print player, column, row, entry+exit
 				
@@ -100,6 +106,7 @@ class player():
 		self.number = number
 		self.style = style
 		self.lock = False #prevents movement and pipe creation
+		self.score = 0
 
 		self.image = load_image(image)
 		self.image.set_colorkey(white)
@@ -121,6 +128,7 @@ class player():
 		self.current_column = self.previous_column
 		self.current_row = self.previous_row
 		self.lastpipe = False
+		self.collision = False
 
 	def reset(self):
 		self.velocity = [0, 0]
@@ -142,12 +150,12 @@ class player():
 		self.previous_column = self.current_column
 		self.previous_row = self.current_row
 
-	def status(self, collision):
+	def status(self):
 		"""Status checks the column and rows for changes, then places pipes."""
 		self.current_column = board.column(self.x)
 		self.current_row = board.row(self.y)
 
-		if collision:
+		if self.collision:
 			if self.lastpipe:
 				pass
 			else:
@@ -158,6 +166,7 @@ class player():
 						   self.entry)
 
 		else:
+			self.score += 1
 			if self.previous_column != self.current_column:
 				if self.previous_column > self.current_column:
 					self.change_grid('right', self.previous_column, self.current_row)
@@ -182,15 +191,26 @@ class Score(pygame.sprite.Sprite):
 	def __init__(self):
 		pygame.sprite.Sprite.__init__(self)
 		self.font = pygame.font.Font(None, 20)
-		self.color = black
+		self.font.set_italic(1)
+		self.color = Color('black')
 		self.update()
-		self.rect = self.image.get_rect().move(0, 0)
+		self.rect = self.image.get_rect().move(25, 25)
+	
+	def update(self):
+		msg = ""
+		i = 0
+		for players in [player1, player2]:
+			msg += "Player %s: %d . " % (players.number, players.score)
+			i += 1
+		self.image = self.font.render(msg, 0, self.color)
 
 def main():
 	"""
 	pygame.init()
 	"""
 	pass
+
+pygame.init()
 
 screen = pygame.display.set_mode(size)
 
@@ -231,6 +251,11 @@ pipes = pygame.sprite.Group()
 all = pygame.sprite.Group()
 
 Pipe.containers = pipes, all
+Score.containers = all
+
+#Set up score
+if pygame.font:
+	all.add(Score())
 
 while mainloop:
     #Calculate time.
@@ -256,13 +281,15 @@ while mainloop:
 			if keystate[K_g]:
 				print board.grid
 
+	#all.clear(screen, background)
+	#all.update()
+
 	#Display FPS
 	pygame.display.set_caption("[FPS]: %.2f" % clock.get_fps())
 
 	#Calculate player movement
 	for players in playerlist:
-		if players.lock == False:
-			collision = False
+		if players.collision == False:
 			if not board.collision(int(players.x), int(players.y)):
 				players.x += players.velocity[0] * seconds
 				players.y += players.velocity[1] * seconds
@@ -270,13 +297,14 @@ while mainloop:
 				players.rect.centery = players.y
 				screen.blit(players.image, players.rect)
 			else:
-				collision = True
-			players.status(collision)
+				players.collision = True
+				print players.score
+			players.status()
 		#screen.blit(players.image, players.rect)
 	pygame.display.flip()  
 	
 	screen.fill(white)
-	dirty = pipes.draw(screen)
+	dirty = all.draw(screen)
 	pygame.display.update(dirty)
 
 """
