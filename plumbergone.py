@@ -29,6 +29,13 @@ bordery = (height % cell_size) / 2 + cell_size
 cell_count_x = (width - (2 * borderx)) / cell_size
 cell_count_y = (height - (2 * bordery)) / cell_size
 
+def round(decimal):
+	floor = int(decimal)
+	if (decimal - floor) >= 0.5:
+		return floor + 1
+	else:
+		return floor
+
 class gameboard():
 	def __init__(self, x, y):
 		self.grid = []
@@ -225,15 +232,15 @@ player2 = player(2, '2', startx2, starty2, player_image, 'right')
 playerlist = [player1, player2]
 
 #Control Scheme
-player1.up = K_UP
-player1.down = K_DOWN
-player1.left = K_LEFT
-player1.right = K_RIGHT
+player2.up = K_UP
+player2.down = K_DOWN
+player2.left = K_LEFT
+player2.right = K_RIGHT
 
-player2.up = K_w
-player2.down = K_s
-player2.left = K_a
-player2.right = K_d
+player1.up = K_w
+player1.down = K_s
+player1.left = K_a
+player1.right = K_d
 
 #def load_pipes(style, direction, filetype):
 pipe_styles = ['1', '2']
