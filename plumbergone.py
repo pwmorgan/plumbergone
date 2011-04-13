@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-#Testing Branch
-
 #Import Modules
 import os
 import sys
@@ -56,34 +54,17 @@ class gameboard():
 		return int((x - borderx) / cell_size)
 
 	def add_pipe(self, player, style, column, row, entry, exit):
-		next_grid = {'up':(0,1), 'down':(0,-1), 'left':(1,0), 'right':(-1,0), 'center':(0,0)}
+		#next_grid = {'up':(0,1), 'down':(0,-1), 'left':(1,0), 'right':(-1,0), 'center':(0,0)}
+		"""
 		try:
 			if self.grid[row + next_grid[exit][1]][column + next_grid[exit][0]] != 0:
 				exit = 'center'
 		except IndexError:
 				exit = 'center'
+		"""
 		self.grid[row][column] = [player, entry+exit]
 		Pipe(self.pos(row, column), style, entry+exit)
-		#print "Added", entry+exit, "pipe for player", player, "at", column, row
-		#player.lastpipe = (row, column)
-		#print player, column, row, entry+exit
 				
-	def collision(self, x, y):
-		row = (y - bordery) / cell_size
-		column = (x - borderx) / cell_size
-		if column < 0:
-			return True
-		elif row < 0:
-			return True
-		elif row >= len(self.grid):
-			return True
-		elif column >= len(self.grid[row]):
-			return True
-		if self.grid[row][column] != 0:
-			return True
-		else:
-		   	return False
-                       
 	def store(self):
 		gameboard.lowest = deepcopy(gameboard.previous)
 		gameboard.previous = deepcopy(gameboard.grid)
@@ -181,6 +162,24 @@ class player():
 				else:
 					self.change_grid('up', self.current_column, self.previous_row)
 
+	def collision(self, grid):
+		"""
+		row = (y - bordery) / cell_size
+		column = (x - borderx) / cell_size
+		if column < 0:
+			return True
+		elif row < 0:
+			return True
+		elif row >= len(self.grid):
+			return True
+		elif column >= len(self.grid[row]):
+			return True
+		if self.grid[row][column] != 0:
+			return True
+		else:
+		   	return False
+		"""
+                       
 class Pipe(pygame.sprite.Sprite):
 	images = {}
 	def __init__(self, pos, style, direction):
