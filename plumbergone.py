@@ -41,14 +41,17 @@ def load_image(image):
 	return surface
 
 def load_pipes(style, direction, filetype):
+	"""Load all the pipes with the specific styles and orientations."""
 	image = "pipes" + "_" + style + "_" + direction + "." + filetype
 	return load_image(image)
 
 def round(decimal):
+	"""Convert float to integer, but round up or down instead of floor rounding."""
 	integer = int(decimal)
-	if decimal - integer >= .5:
-		return integer += 1
-	else
+	if (decimal - integer) >= .5:
+		integer += 1
+		return integer
+	else:
 		return integer
 
 class gameboard():
@@ -93,20 +96,24 @@ class gameboard():
 
 class Player():
 	def __init__(self, number, style, x, y, image, previous_entry):
+		#Initial player 
 		self.number = number
 		self.style = style
-		#self.lock = False #prevents movement and pipe creation
 		self.score = 0
+		self.collision = False
+		#self.lock = False #prevents movement and pipe creation
 
+		#Load images
 		self.image = load_image(image)
 		self.image.set_colorkey(white)
 
 		#Screen placement
 		self.rect = self.image.get_rect()
-		self.rect.centerx = self.x = x
-		self.rect.centery = self.y = y
-		#self.x = x
-		#self.y = y
+		self.rect.centerx = x
+		self.rect.centery = y
+		self.x = x
+		self.y = y
+
 		self.velocity = [0, 0]
 		self.speed = 85 #pixels a second
 
@@ -118,7 +125,6 @@ class Player():
 		#self.current_column = self.previous_column
 		#self.current_row = self.previous_row
 		#self.lastpipe = False
-		self.collision = False
 
 	def reset(self):
 		self.velocity = [0, 0]
@@ -131,6 +137,7 @@ class Player():
 		self.velocity[1] = self.speed * direction[1]
 
 	def change_grid(self, direction, column, row):
+		pass
 		"""
 		self.previous_entry = self.entry
 		self.entry = direction
@@ -143,6 +150,7 @@ class Player():
 		"""
 
 	def status(self):
+		pass
 		"""Status checks the column and rows for changes, then places pipes."""
 		"""
 		self.current_column = board.column(self.x)
@@ -159,36 +167,74 @@ class Player():
 						   self.entry)
 
 		else:
-			self.score += 1
 			if self.previous_column != self.current_column:
+				self.score += 1
 				if self.previous_column > self.current_column:
 					self.change_grid('right', self.previous_column, self.current_row)
 				else:
 					self.change_grid('left', self.previous_column, self.current_row)
 
 			if self.previous_row != self.current_row:
+				self.score += 1
 				if self.previous_row > self.current_row:
 					self.change_grid('down', self.current_column, self.previous_row)
 				else:
 					self.change_grid('up', self.current_column, self.previous_row)
 		"""
 
-	def collision(self, grid):
-		"""
-		row = (y - bordery) / cell_size
-		column = (x - borderx) / cell_size
+	def check_collision(self, x, y, gameboard):
+		pass
+		row = gameboard.row(y)
+		column = gameboard.column(x)
 		if column < 0:
 			return True
 		elif row < 0:
 			return True
-		elif row >= len(self.grid):
+		elif row >= len(gameboard.grid):
 			return True
-		elif column >= len(self.grid[row]):
+		elif column >= len(gameboard.grid[row]):
 			return True
-		if self.grid[row][column] != 0:
+		if gameboard.grid[row][column] != 0:
 			return True
 		else:
 		   	return False
+
+	def check_pipe(self, x, y, gameboard):
+		if self.collision:
+			self.exit = 'center'
+			pass #Add end pipe
+		else:
+			#Check if row and column are same
+				#Add pipe
+			pass
+
+		"""
+		self.current_row = board.row(self.y)
+
+		if self.collision:
+			if self.lastpipe:
+				pass
+			else:
+				self.lastpipe = (self.current_column, self.current_row)
+			self.entry = 'center'
+			board.add_pipe(self.number, self.style, self.lastpipe[0],
+						   self.lastpipe[1], self.previous_entry,
+						   self.entry)
+
+		else:
+			if self.previous_column != self.current_column:
+				self.score += 1
+				if self.previous_column > self.current_column:
+					self.change_grid('right', self.previous_column, self.current_row)
+				else:
+					self.change_grid('left', self.previous_column, self.current_row)
+
+			if self.previous_row != self.current_row:
+				self.score += 1
+				if self.previous_row > self.current_row:
+					self.change_grid('down', self.current_column, self.previous_row)
+				else:
+					self.change_grid('up', self.current_column, self.previous_row)
 		"""
                        
 class Pipe(pygame.sprite.Sprite):
@@ -233,8 +279,8 @@ startx1 = borderx + (cell_size / 2)
 starty1 = bordery + (cell_size / 2)
 startx2 = width - startx1
 starty2 = height - starty1
-player1 = player(1, '1', startx1, starty1, player_image, 'left')
-player2 = player(2, '2', startx2, starty2, player_image, 'right')
+player1 = Player(1, '1', startx1, starty1, player_image, 'left')
+player2 = Player(2, '2', startx2, starty2, player_image, 'right')
 playerlist = [player1, player2]
 
 #Control Scheme
@@ -299,29 +345,35 @@ while mainloop:
 	pygame.display.set_caption("[FPS]: %.2f" % clock.get_fps())
 
 	#Calculate player movement
-	for players in playerlist:
+	for player in playerlist:
+
 		#Check if moves
-		#Move abstract value
-		#Convert position to integer
-		#Move art to pixels
-		#Check for collisions
-		#Check for pipe adds (collision pipe versus normal pipe)
-		#Add pipe
-		if players.collision == False:
-			players.x += players.velocity[0] * seconds
-			players.y += players.velocity[1] * seconds
-			players.roundx
-			players.roundy 
-				players.rect.centerx = players.x
-				players.rect.centery = players.y
-				screen.blit(players.image, players.rect)
-			else:
-				players.collision = True
-				print players.score
-			players.status()
+		if player.collision == False:
+
+			#Move abstract value
+			player.x += player.velocity[0] * seconds
+			player.y += player.velocity[1] * seconds
+
+			#Convert position to integer
+			player.roundx = round(player.x)
+			player.roundy = round(player.y)
+
+			#Move art to pixels
+			player.rect.centerx = player.roundx
+			player.rect.centery = player.roundy
+			screen.blit(player.image, player.rect)
+
+			#Check for collisions
+			player.collision = player.check_collision(player.roundx, player.roundy, board)
+
+			#Check for pipe adds (collision pipe versus normal pipe)
+			player.check_pipe(player.roundx, player.roundy, board)
+			
+			#players.status()
 		#screen.blit(players.image, players.rect)
+
+	#Refresh screen and draw all the dirty rects.
 	pygame.display.flip()  
-	
 	screen.fill(white)
 	dirty = all.draw(screen)
 	pygame.display.update(dirty)
