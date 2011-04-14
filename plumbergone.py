@@ -78,14 +78,12 @@ class gameboard():
 	def column(self, x):
 		return int((x - borderx) / cell_size)
 
-	def add_pipe(self, player_number, column, row):
-		#next_grid = {'up':(0,1), 'down':(0,-1), 'left':(1,0), 'right':(-1,0), 'center':(0,0)}
+	def add_pipe(self, player_number, row, column):
 		try:
 			self.grid[row][column] = player_number #add additional details?
 		except IndexError:
 			#Out of list range means no pipe gets added.
 			pass
-		#Pipe(self.pos(row, column), style, entry+exit)
 				
 	def store(self):
 		gameboard.lowest = deepcopy(gameboard.previous)
@@ -117,7 +115,7 @@ class Player():
 		#Grid placement
 		self.currentcell = gameboard.row(self.y), gameboard.column(self.x)
 		self.previouscell = self.currentcell
-		self.entry = previous_entry
+		self.entry = 'center'
 		self.exit = previous_entry
 		#self.previous_column = board.column(self.x)
 		#self.previous_row = board.row(self.y)
@@ -135,23 +133,8 @@ class Player():
 		self.velocity[0] = self.speed * direction[0]
 		self.velocity[1] = self.speed * direction[1]
 
-	def change_grid(self, direction, column, row):
-		pass
-		"""
-		self.previous_entry = self.entry
-		self.entry = direction
-		board.add_pipe(self.number, self.style, column,
-		   			   row, self.previous_entry, 
-		   			   self.entry)
-		self.lastpipe = (column, row)
-		self.previous_column = self.current_column
-		self.previous_row = self.current_row
-		"""
-
-	def status(self):
-		pass
-
 	def record_entry(self):
+		opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
 		#[0] = row, [1] = column
 		if self.previouscell[0] > self.currentcell[0]:
 			self.exit = self.entry
@@ -168,21 +151,6 @@ class Player():
 		else:
 			pass
 			
-		"""
-			if self.previous_column != self.current_column:
-				if self.previous_column > self.current_column:
-					self.change_grid('right', self.previous_column, self.current_row)
-				else:
-					self.change_grid('left', self.previous_column, self.current_row)
-
-			if self.previous_row != self.current_row:
-				self.score += 1
-				if self.previous_row > self.current_row:
-					self.change_grid('down', self.current_column, self.previous_row)
-				else:
-					self.change_grid('up', self.current_column, self.previous_row)
-		"""
-
 	def check_collision(self, x, y, gameboard):
 		row = gameboard.row(y)
 		column = gameboard.column(x)
@@ -205,25 +173,26 @@ class Player():
 		row = gameboard.row(y)
 		column = gameboard.column(x)
 		self.currentcell = (row, column)
+		opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
 	
 		#Check for collision
 		if self.collision:
-			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
-			self.record_entry()
+			#self.record_entry()
 			self.entry = opposite[self.entry]
 			self.exit = 'center'
 			#Decide if the end pipe should go in the current cell or the previous cell
 			#Add end pipe
-			board.add_pipe(self.number, column, row) #add entry, exit?
+			board.add_pipe(self.number, row, column) #add entry, exit?
 			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
 				 self.style, self.entry + self.exit)
 
 		#Check if row and column are same
 		elif self.currentcell != self.previouscell:
+			#[0] = row, [1] = column
 			self.record_entry()
 			#Add pipe in previous cell
 			#Pipe(gameboard.pos(self.previouscell), self.style, self.entry + self.exit)
-			board.add_pipe(self.number, column, row) #add entry, exit?
+			board.add_pipe(self.number, self.previouscell[0], self.previouscell[1]) #add entry, exit?
 			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
 				 self.style, self.entry + self.exit)
 			self.previouscell = (row, column)
@@ -389,9 +358,6 @@ while mainloop:
 			#Check for pipe adds (collision pipe versus normal pipe)
 			player.check_pipe(player.roundx, player.roundy, board)
 			
-			#players.status()
-		#screen.blit(players.image, players.rect)
-
 	#Refresh screen and draw all the dirty rects.
 	pygame.display.flip()  
 	screen.fill(white)
