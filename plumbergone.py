@@ -78,17 +78,14 @@ class gameboard():
 	def column(self, x):
 		return int((x - borderx) / cell_size)
 
-	def add_pipe(self, player, style, column, row, entry, exit):
+	def add_pipe(self, player_number, column, row):
 		#next_grid = {'up':(0,1), 'down':(0,-1), 'left':(1,0), 'right':(-1,0), 'center':(0,0)}
-		"""
 		try:
-			if self.grid[row + next_grid[exit][1]][column + next_grid[exit][0]] != 0:
-				exit = 'center'
+			self.grid[row][column] = player_number #add additional details?
 		except IndexError:
-				exit = 'center'
-		"""
-		self.grid[row][column] = [player, entry+exit]
-		Pipe(self.pos(row, column), style, entry+exit)
+			#Out of list range means no pipe gets added.
+			pass
+		#Pipe(self.pos(row, column), style, entry+exit)
 				
 	def store(self):
 		gameboard.lowest = deepcopy(gameboard.previous)
@@ -121,13 +118,12 @@ class Player():
 		self.currentcell = gameboard.row(self.y), gameboard.column(self.x)
 		self.previouscell = self.currentcell
 		self.entry = previous_entry
-		self.previous_entry = previous_entry
+		self.exit = previous_entry
 		#self.previous_column = board.column(self.x)
 		#self.previous_row = board.row(self.y)
 		#self.current_column = self.previous_column
 		#self.current_row = self.previous_row
 		#self.lastpipe = False
-		
 
 	def reset(self):
 		self.velocity = [0, 0]
@@ -159,16 +155,16 @@ class Player():
 		#[0] = row, [1] = column
 		if self.previouscell[0] > self.currentcell[0]:
 			self.exit = self.entry
-			self.entry = 'down'
+			self.entry = 'up'
 		elif self.previouscell[0] < self.currentcell[0]:
 			self.exit = self.entry
-			self.entry = 'up'
+			self.entry = 'down'
 		elif self.previouscell[1] > self.currentcell[1]:
 			self.exit = self.entry
-			self.entry = 'right'
+			self.entry = 'left'
 		elif self.previouscell[1] < self.currentcell[1]:
 			self.exit = self.entry
-			self.entry = 'left'
+			self.entry = 'right'
 		else:
 			pass
 			
@@ -204,21 +200,32 @@ class Player():
 		   	return False
 
 	def check_pipe(self, x, y, gameboard):
+
+		#Set the current row and column
 		row = gameboard.row(y)
 		column = gameboard.column(x)
 		self.currentcell = (row, column)
 	
+		#Check for collision
 		if self.collision:
+			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
 			self.record_entry()
+			self.entry = opposite[self.entry]
 			self.exit = 'center'
-			Pipe(gameboard.pos(row, column), self.style, self.entry + self.exit)
 			#Decide if the end pipe should go in the current cell or the previous cell
 			#Add end pipe
+			board.add_pipe(self.number, column, row) #add entry, exit?
+			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
+				 self.style, self.entry + self.exit)
+
 		#Check if row and column are same
 		elif self.currentcell != self.previouscell:
 			self.record_entry()
 			#Add pipe in previous cell
-			Pipe(gameboard.pos(row, column), self.style, self.entry + self.exit)
+			#Pipe(gameboard.pos(self.previouscell), self.style, self.entry + self.exit)
+			board.add_pipe(self.number, column, row) #add entry, exit?
+			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
+				 self.style, self.entry + self.exit)
 			self.previouscell = (row, column)
 		
 		"""
