@@ -138,16 +138,16 @@ class Player():
 		#[0] = row, [1] = column
 		if self.previouscell[0] > self.currentcell[0]:
 			self.exit = self.entry
-			self.entry = 'up'
+			self.entry = 'down'
 		elif self.previouscell[0] < self.currentcell[0]:
 			self.exit = self.entry
-			self.entry = 'down'
+			self.entry = 'up'
 		elif self.previouscell[1] > self.currentcell[1]:
 			self.exit = self.entry
-			self.entry = 'left'
+			self.entry = 'right'
 		elif self.previouscell[1] < self.currentcell[1]:
 			self.exit = self.entry
-			self.entry = 'right'
+			self.entry = 'left'
 		else:
 			pass
 			
@@ -178,7 +178,6 @@ class Player():
 		#Check for collision
 		if self.collision:
 			#self.record_entry()
-			self.entry = opposite[self.entry]
 			self.exit = 'center'
 			#Decide if the end pipe should go in the current cell or the previous cell
 			#Add end pipe
@@ -194,7 +193,7 @@ class Player():
 			#Pipe(gameboard.pos(self.previouscell), self.style, self.entry + self.exit)
 			board.add_pipe(self.number, self.previouscell[0], self.previouscell[1]) #add entry, exit?
 			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
-				 self.style, self.entry + self.exit)
+				 self.style, self.exit + self.entry)
 			self.previouscell = (row, column)
 		
 		"""
@@ -232,7 +231,7 @@ class Pipe(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self, self.containers)
 		self.image = self.images[style][direction]
 		self.rect = self.image.get_rect(topleft=pos)
-		#print "New pipe at", pos[0], pos[1]
+		print "New", direction, "pipe at", pos[0], pos[1]
 
 class Score(pygame.sprite.Sprite):
 	def __init__(self):
