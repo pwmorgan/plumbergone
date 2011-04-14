@@ -95,7 +95,7 @@ class gameboard():
 		gameboard.previous = deepcopy(gameboard.grid)
 
 class Player():
-	def __init__(self, number, style, x, y, image, previous_entry):
+	def __init__(self, number, style, x, y, image, gameboard, previous_entry):
 		#Initial player 
 		self.number = number
 		self.style = style
@@ -118,13 +118,16 @@ class Player():
 		self.speed = 85 #pixels a second
 
 		#Grid placement
-		#self.entry = previous_entry
-		#self.previous_entry = previous_entry
+		self.currentcell = gameboard.row(self.y), gameboard.column(self.x)
+		self.previouscell = self.currentcell
+		self.entry = previous_entry
+		self.previous_entry = previous_entry
 		#self.previous_column = board.column(self.x)
 		#self.previous_row = board.row(self.y)
 		#self.current_column = self.previous_column
 		#self.current_row = self.previous_row
 		#self.lastpipe = False
+		
 
 	def reset(self):
 		self.velocity = [0, 0]
@@ -151,24 +154,26 @@ class Player():
 
 	def status(self):
 		pass
-		"""Status checks the column and rows for changes, then places pipes."""
-		"""
-		self.current_column = board.column(self.x)
-		self.current_row = board.row(self.y)
 
-		if self.collision:
-			if self.lastpipe:
-				pass
-			else:
-				self.lastpipe = (self.current_column, self.current_row)
-			self.entry = 'center'
-			board.add_pipe(self.number, self.style, self.lastpipe[0],
-						   self.lastpipe[1], self.previous_entry,
-						   self.entry)
-
+	def record_entry(self):
+		#[0] = row, [1] = column
+		if self.previouscell[0] > self.currentcell[0]:
+			self.exit = self.entry
+			self.entry = 'down'
+		elif self.previouscell[0] < self.currentcell[0]:
+			self.exit = self.entry
+			self.entry = 'up'
+		elif self.previouscell[1] > self.currentcell[1]:
+			self.exit = self.entry
+			self.entry = 'right'
+		elif self.previouscell[1] < self.currentcell[1]:
+			self.exit = self.entry
+			self.entry = 'left'
 		else:
+			pass
+			
+		"""
 			if self.previous_column != self.current_column:
-				self.score += 1
 				if self.previous_column > self.current_column:
 					self.change_grid('right', self.previous_column, self.current_row)
 				else:
@@ -183,7 +188,6 @@ class Player():
 		"""
 
 	def check_collision(self, x, y, gameboard):
-		pass
 		row = gameboard.row(y)
 		column = gameboard.column(x)
 		if column < 0:
@@ -194,20 +198,29 @@ class Player():
 			return True
 		elif column >= len(gameboard.grid[row]):
 			return True
-		if gameboard.grid[row][column] != 0:
+		elif gameboard.grid[row][column] != 0:
 			return True
 		else:
 		   	return False
 
 	def check_pipe(self, x, y, gameboard):
+		row = gameboard.row(y)
+		column = gameboard.column(x)
+		self.currentcell = (row, column)
+	
 		if self.collision:
+			self.record_entry()
 			self.exit = 'center'
-			pass #Add end pipe
-		else:
-			#Check if row and column are same
-				#Add pipe
-			pass
-
+			Pipe(gameboard.pos(row, column), self.style, self.entry + self.exit)
+			#Decide if the end pipe should go in the current cell or the previous cell
+			#Add end pipe
+		#Check if row and column are same
+		elif self.currentcell != self.previouscell:
+			self.record_entry()
+			#Add pipe in previous cell
+			Pipe(gameboard.pos(row, column), self.style, self.entry + self.exit)
+			self.previouscell = (row, column)
+		
 		"""
 		self.current_row = board.row(self.y)
 
@@ -279,8 +292,8 @@ startx1 = borderx + (cell_size / 2)
 starty1 = bordery + (cell_size / 2)
 startx2 = width - startx1
 starty2 = height - starty1
-player1 = Player(1, '1', startx1, starty1, player_image, 'left')
-player2 = Player(2, '2', startx2, starty2, player_image, 'right')
+player1 = Player(1, '1', startx1, starty1, player_image, board, 'left')
+player2 = Player(2, '2', startx2, starty2, player_image, board, 'right')
 playerlist = [player1, player2]
 
 #Control Scheme
