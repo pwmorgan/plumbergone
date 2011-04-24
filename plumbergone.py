@@ -17,7 +17,7 @@ height = 512
 size = width, height
 white = 255, 255, 255
 black = 0, 0, 0
-clock = pygame.time.Clock()
+#clock = pygame.time.Clock()
 FPS = 60
 
 #Grid Settings
@@ -42,12 +42,13 @@ def load_pipes(style, direction, filetype):
 	return load_image(image)
 
 #Sound files
-def dummysound():
+class dummysound():
+	"""Class that placeholds and plays an empty sound."""
 	def play(self): 
-		#Placeholder for broken sound files.
 		pass
 
 def load_sound(sound):
+	"""Load a sound and add it to the mixer."""
 	if not pygame.mixer: 
 		return dummysound()
 	sound = os.path.join(main_dir, 'data', sound)
@@ -60,7 +61,7 @@ def load_sound(sound):
 
 #Utility Functions
 def round(decimal):
-	"""Convert float to integer, but round up or down instead of floor rounding."""
+	"""Convert float to integer; round up or down instead of floor rounding."""
 	integer = int(decimal)
 	if (decimal - integer) >= .5:
 		integer += 1
@@ -128,7 +129,7 @@ class Player():
 		self.x = x
 		self.y = y
 		self.velocity = [0, 0]
-		self.speed = 85 #pixels a second
+		self.speed = 100 #pixels a second
 
 		#Grid placement
 		self.currentcell = gameboard.row(self.y), gameboard.column(self.x)
@@ -196,7 +197,7 @@ class Player():
 			gameboard.add_pipe(self.number, row, column) #add entry, exit?
 			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
 				 self.style, self.entry + self.exit)
-			print self.score
+			#print self.score
 
 		#Check if row and column are same
 		elif self.currentcell != self.previouscell:
@@ -218,37 +219,78 @@ class Pipe(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect(topleft=pos)
 		#print "New", direction, "pipe at", pos[0], pos[1]
 
+	def update(self):
+		pass
+
 class Score(pygame.sprite.Sprite):
-	def __init__(self, players):
-		self.players = players
-		pygame.sprite.Sprite.__init__(self)
-		self.font = pygame.font.Font(None, 20)
-		self.font.set_italic(1)
-		self.color = Color('black')
+	def __init__(self, player, x, y):
+		pygame.sprite.Sprite.__init__(self, self.containers)
+		self.player = player
+		self.font = pygame.font.Font(None, 24)
+		self.font.set_italic(0)
+		self.color = Color('white')
 		self.update()
-		self.rect = self.image.get_rect().move(25, 25)
+		self.rect = self.image.get_rect().move(x, y)
 	
 	def update(self):
-		msg = ""
-		i = 0
-		for players in self.players:
-			msg += "Player %s: %d . " % (players.number, players.score)
-			i += 1
+		msg = "Player %s: %d" % (self.player.number, self.player.score)
 		self.image = self.font.render(msg, 0, self.color)
 
-def start_screen():
-	pass
+def start_screen(screen):
+	screen = screen
+	background_img = load_image('background1.png')
+	bg_rect = Rect(0, 0, width, height)
+	background = pygame.Surface((width, height))
+	background.blit(background_img, (0, 0))
+	screen.blit(background, (0,0))
+
 	#Load Screen
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			sys.exit()
+		if event.type == pygame.KEYDOWN:
+			keystate = pygame.key.get_pressed()
+			if keystate[K_q]:
+				sys.exit()
+			if keystate[K_n]:
+				return False
+
+	pygame.display.flip()  
+	screen.blit(background, bg_rect)
+
+	return True
 	#Load buttons
 	#Set mouse and key events
+
+#Game Logic Functions
+def prep_timer():
+	pass
+	#Rectangle
+	#GAME BEGINS
+	# in 
+	# 3 2 1
+	#Clear
+
+def end_match(players):
+	for player in players:
+		if player.collision == False:
+			return False
+	return True
 
 def main():
 	#Game Initialization
 	pygame.init()
+	screen = pygame.display.set_mode(size) #,pygame.FULLSCREEN)
+	menu = True
+
+	while menu:
+		menu = start_screen(screen)
+
+	#Game init
 	playtime = 0
 	mainloop = True
 	board = gameboard(cell_count_x, cell_count_y)
-	screen = pygame.display.set_mode(size) #,pygame.FULLSCREEN)
+	clock = pygame.time.Clock()
 
 	#Draw the background
 	background_img = load_image('background1.png')
@@ -256,7 +298,6 @@ def main():
 	background = pygame.Surface((width, height))
 	background.blit(background_img, (0, 0))
 	screen.blit(background, (0,0))
-	#pygame.display.flip()
 
 	#Establish players and starting positions
 	player_image = "player.bmp"
@@ -266,6 +307,8 @@ def main():
 	starty2 = height - starty1
 	player1 = Player(1, '1', startx1, starty1, player_image, board, 'left')
 	player2 = Player(2, '2', startx2, starty2, player_image, board, 'right')
+	player1.movement([1, 0])
+	player2.movement([-1, 0])
 	playerlist = [player1, player2]
 
 	#Control Scheme
@@ -291,16 +334,16 @@ def main():
 			Pipe.images[style][key] = Pipe.images[style][other_images[key]]
 
 	pipes = pygame.sprite.Group()
+	scores = pygame.sprite.Group()
 	all = pygame.sprite.Group()
 	Pipe.containers = pipes, all
-	Score.containers = all
+	Score.containers = scores, all
 
 	#Set up score
-	"""
 	if pygame.font:
-		all.add(Score())
-	"""
-	
+		all.add(Score(player1, 30, 25))
+		all.add(Score(player2, 900, 25))
+
 	while mainloop:
 		#Calculate time.
 		milliseconds = clock.tick(FPS)
@@ -313,15 +356,20 @@ def main():
 				sys.exit()
 			if event.type == pygame.KEYDOWN:
 				keystate = pygame.key.get_pressed()
-				for players in playerlist:
-					if keystate[players.up]:
-						players.movement([0, -1])
-					elif keystate[players.down]:
-						players.movement([0, 1])
-					elif keystate[players.right]:
-						players.movement([1, 0])
-					elif keystate[players.left]:
-						players.movement([-1, 0])
+				for player in playerlist:
+					#Check previous entry to prevent self crashes.
+					if keystate[player.up]:
+						if player.entry != 'up':
+							player.movement([0, -1])
+					elif keystate[player.down]:
+						if player.entry != 'down':
+							player.movement([0, 1])
+					elif keystate[player.right]:
+						if player.entry != 'right':
+							player.movement([1, 0])
+					elif keystate[player.left]:
+						if player.entry != 'left':
+							player.movement([-1, 0])
 				if keystate[K_g]:
 					print board.grid
 				if keystate[K_q]:
@@ -350,15 +398,19 @@ def main():
 				player.collision = player.check_collision(player.roundx, player.roundy, board)
 				#Check for pipe adds (collision pipe versus normal pipe)
 				player.check_pipe(player.roundx, player.roundy, board)
+
+		if end_match(playerlist):
+			pass
+			#print 'Game Over!'
 				
 		#Refresh screen and draw all the dirty rects.
+		all.update()
 		pygame.display.flip()  
 		screen.blit(background, bg_rect)
-		#screen.fill(white)
 		dirty = all.draw(screen)
 		pygame.display.update(dirty)
 
 if __name__ == '__main__':
-	game = True
-	while game:
+	program = True
+	while program:
 		main()
