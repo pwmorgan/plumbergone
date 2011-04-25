@@ -69,7 +69,25 @@ def round(decimal):
 	else:
 		return integer
 
-#Game Classes
+#UI Classes
+class Button():
+	def __init__(self, x, y, up, hover, down):
+		self.up = load_image(up)
+		self.hover = load_image(hover)
+		self.down = load_image(down)
+		self.rect = self.up.get_rect()
+		self.rect.bottomleft = (y, x)
+
+	def refresh(self, mouseX, mouseY, pressed):
+		screen.blit(self.up, self.rect)
+	
+	def on_click(self):
+		pass
+
+class Options():
+	pass
+
+#Gameplay Classes
 class gameboard():
 	"""The gameboad class contains logic for storing the current game 
 	state and for detecting collisions. Also contains functions for
@@ -197,7 +215,6 @@ class Player():
 			gameboard.add_pipe(self.number, row, column) #add entry, exit?
 			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
 				 self.style, self.entry + self.exit)
-			#print self.score
 
 		#Check if row and column are same
 		elif self.currentcell != self.previouscell:
@@ -237,14 +254,24 @@ class Score(pygame.sprite.Sprite):
 		self.image = self.font.render(msg, 0, self.color)
 
 def start_screen(screen):
+	#Start Screen settings
 	screen = screen
-	background_img = load_image('background1.png')
+	background_img = load_image('startscreen1.png')
 	bg_rect = Rect(0, 0, width, height)
 	background = pygame.Surface((width, height))
 	background.blit(background_img, (0, 0))
 	screen.blit(background, (0,0))
 
-	#Load Screen
+	#Load Buttons
+	options = Button(512, 150, 'options_off.png', 
+                     'options_on.png', 'options_on.png') 
+	newgame = Button(512, 425, 'newgame_off.png', 
+                     'newgame_on.png', 'newgame_on.png') 
+	quit = Button(512, 650, 'quit_off.png', 
+                  'quit_on.png', 'options_on.png') 
+	buttons = [newgame, options, quit]
+
+	#Screen Events
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			sys.exit()
@@ -254,6 +281,9 @@ def start_screen(screen):
 				sys.exit()
 			if keystate[K_n]:
 				return False
+
+	for button in buttons:
+		screen.blit(button.up, button.rect)
 
 	pygame.display.flip()  
 	screen.blit(background, bg_rect)
