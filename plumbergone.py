@@ -77,13 +77,27 @@ class Button():
 		self.down = load_image(down)
 		self.rect = self.up.get_rect()
 		self.rect.bottomleft = (y, x)
+		self.image = self.up
 
-	def refresh(self, mouseX, mouseY, pressed):
+	def status(self, screen, pos, click):
 		screen.blit(self.up, self.rect)
+		if self.rect.top < pos[1] < self.rect.bottom:
+			if self.rect.left < pos[0] < self.rect.right:
+				self.image = self.hover
+				if click:
+					self.on_click()
+					return True
+			else:
+				self.image = self.up
+		else:
+			self.image = self.up
+
+		return False
 	
 	def on_click(self):
-		pass
-
+		self.image = self.down
+		self.action(self)
+				
 class Options():
 	pass
 
@@ -261,6 +275,16 @@ def start_screen(screen):
 	background = pygame.Surface((width, height))
 	background.blit(background_img, (0, 0))
 	screen.blit(background, (0,0))
+	
+	def _quit(self):
+		sys.exit()
+	
+	def _newgame(self):
+		self.start = True
+
+	def _options(self):
+		print "Load options."
+		return True
 
 	#Load Buttons
 	options = Button(512, 150, 'options_off.png', 
@@ -269,28 +293,46 @@ def start_screen(screen):
                      'newgame_on.png', 'newgame_on.png') 
 	quit = Button(512, 650, 'quit_off.png', 
                   'quit_on.png', 'options_on.png') 
+	newgame.start = False
+	newgame.action = _newgame
+	options.action = _options
+	quit.action = _quit
+	
 	buttons = [newgame, options, quit]
 
-	#Screen Events
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			sys.exit()
-		if event.type == pygame.KEYDOWN:
-			keystate = pygame.key.get_pressed()
-			if keystate[K_q]:
+	menu_loop = True
+
+	while menu_loop:
+		#Mouse Status
+		pos = pygame.mouse.get_pos()
+
+		#Screen Events
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
 				sys.exit()
-			if keystate[K_n]:
-				return False
+			if event.type == pygame.KEYDOWN:
+				keystate = pygame.key.get_pressed()
+				if keystate[K_q]:
+					sys.exit()
+				if keystate[K_n]:
+					return False
+			if event.type == pygame.MOUSEBUTTONDOWN:
+				for button in buttons:
+					button.status(screen, pos, True)
 
-	for button in buttons:
-		screen.blit(button.up, button.rect)
+		for button in buttons:
+			button.status(screen, pos, False)
+			screen.blit(button.image, button.rect)
 
-	pygame.display.flip()  
-	screen.blit(background, bg_rect)
+		if newgame.start:
+			return False
+
+		pygame.display.flip()  
+		screen.blit(background, bg_rect)
 
 	return True
-	#Load buttons
-	#Set mouse and key events
+		#Load buttons
+		#Set mouse and key events
 
 #Game Logic Functions
 def prep_timer():
