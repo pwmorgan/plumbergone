@@ -71,6 +71,7 @@ def round(decimal):
 
 #UI Classes
 class Button():
+	"""The button class controls the different states of the button image as well as the click event."""
 	def __init__(self, x, y, up, hover, down):
 		self.up = load_image(up)
 		self.hover = load_image(hover)
@@ -103,16 +104,19 @@ class Options():
 
 #Gameplay Classes
 class gameboard():
-	"""The gameboad class contains logic for storing the current game 
-	state and for detecting collisions. Also contains functions for
-	determining positions of players."""
+	"""The gameboard class contains logic for storing the current game state and for detecting collisions. Also contains functions for determining positions of players."""
+
 	def __init__(self, x, y):
-		self.grid = []
-		self.new(x, y)
+		self.x = x
+		self.y = y
+		self.new()
 		self.previous = []
 		self.lowest = []
 
-	def new(self, x, y):
+	def new(self):
+		x = self.x
+		y = self.y
+		self.grid = []
 		for row in range(y):
 			self.grid.append([])
 			for column in range(x):
@@ -137,13 +141,18 @@ class gameboard():
 			pass
 				
 	def store(self):
-		gameboard.lowest = deepcopy(gameboard.previous)
-		gameboard.previous = deepcopy(gameboard.grid)
+		self.lowest = deepcopy(self.previous)
+		self.previous = deepcopy(self.grid)
+		self.new()
 
 class Player():
 	"""The Player class contains all the attributes of the player's object
 	as well as its position, speed, and score."""
 	def __init__(self, number, style, x, y, image, gameboard, previous_entry):
+		"""When initializing a player class, you need the player number, pipe
+		sytle, x and y coordinates, player image, the gameboard, and which
+		direction the first player pipe should come from."""
+
 		#Initial player 
 		self.number = number
 		self.style = style
@@ -156,6 +165,7 @@ class Player():
 
 		#Screen placement
 		self.rect = self.image.get_rect()
+		self.start = [x, y]
 		self.rect.centerx = x
 		self.rect.centery = y
 		self.x = x
@@ -170,7 +180,11 @@ class Player():
 		self.exit = previous_entry
 
 	def reset(self):
+		"""Reset clears the player's velocity and resets the center points."""
 		self.velocity = [0, 0]
+		self.collision = False
+		self.x = self.start[0]
+		self.y = self.start[1]
 		self.rect.centerx = self.x
 		self.rect.centery = self.y
 
@@ -180,6 +194,8 @@ class Player():
 		self.velocity[1] = self.speed * direction[1]
 
 	def record_entry(self):
+		"""This function keeps track of from which direction the
+		player entered the current cell."""
 		opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
 		#[0] = row, [1] = column
 		if self.previouscell[0] > self.currentcell[0]:
@@ -198,6 +214,8 @@ class Player():
 			pass
 			
 	def check_collision(self, x, y, gameboard):
+		"""This function checks a player's position with the border grid
+		and the pipes that have already been laid down."""
 		row = gameboard.row(y)
 		column = gameboard.column(x)
 		if column < 0:
@@ -316,10 +334,14 @@ def start_screen(screen):
 					sys.exit()
 				if keystate[K_n]:
 					return False
+				if keystate[K_o]:
+					#TODO add options panel
+					pass
 			if event.type == pygame.MOUSEBUTTONDOWN:
 				for button in buttons:
 					button.status(screen, pos, True)
 
+		#Load buttons
 		for button in buttons:
 			button.status(screen, pos, False)
 			screen.blit(button.image, button.rect)
@@ -331,8 +353,6 @@ def start_screen(screen):
 		screen.blit(background, bg_rect)
 
 	return True
-		#Load buttons
-		#Set mouse and key events
 
 #Game Logic Functions
 def prep_timer():
@@ -429,7 +449,7 @@ def main():
 			if event.type == pygame.KEYDOWN:
 				keystate = pygame.key.get_pressed()
 				for player in playerlist:
-					#Check previous entry to prevent self crashes.
+					#Check previous entrypoint to prevent self crashes.
 					if keystate[player.up]:
 						if player.entry != 'up':
 							player.movement([0, -1])
@@ -471,9 +491,21 @@ def main():
 				#Check for pipe adds (collision pipe versus normal pipe)
 				player.check_pipe(player.roundx, player.roundy, board)
 
+		#End match, clean up and next level
 		if end_match(playerlist):
-			pass
-			#print 'Game Over!'
+			#Wait two seconds.
+
+			#load new background
+			pipes.clear(background, bg_rect)
+			pipes.empty()
+			screen.blit(background, bg_rect)
+
+			#reset players
+			for player in playerlist:
+				player.reset()
+
+			#reset board
+			board.store()
 				
 		#Refresh screen and draw all the dirty rects.
 		all.update()
