@@ -1,5 +1,17 @@
 #!/usr/bin/env python
 
+"""
+PLUMBERGONE
+Patrick Morgan
+p.w.morgan@gmail.com
+April 2011
+
+An arcade game where you lay down pipes across a variety of environments,
+competing for the glorious job of professional plumber. Features art by
+Royce Mclean and sounds from [source].  Written in python and using the
+pygame framework.
+"""
+
 #Import Modules
 import os
 import sys
@@ -433,14 +445,20 @@ def main():
 
 	#Set up score
 	if pygame.font:
-		all.add(Score(player1, 30, 25))
-		all.add(Score(player2, 900, 25))
+		scores.add(Score(player1, 30, 25))
+		scores.add(Score(player2, 900, 25))
 
 	while mainloop:
 		#Calculate time.
 		milliseconds = clock.tick(FPS)
 		seconds = milliseconds / 1000.0
 		playtime += seconds
+
+		#Record Dirty rects
+		rects = []
+		for player in playerlist:
+			dirtyrect = deepcopy(player.rect) 
+			rects.append(dirtyrect)
 		
 		#Watch for key events.
 		for event in pygame.event.get():
@@ -496,9 +514,6 @@ def main():
 			#Wait two seconds.
 
 			#load new background
-			pipes.clear(background, bg_rect)
-			pipes.empty()
-			screen.blit(background, bg_rect)
 
 			#reset players
 			for player in playerlist:
@@ -510,7 +525,9 @@ def main():
 		#Refresh screen and draw all the dirty rects.
 		all.update()
 		pygame.display.flip()  
-		screen.blit(background, bg_rect)
+		for rect in rects:
+			screen.blit(background, rect)
+		#screen.blit(background, bg_rect)
 		dirty = all.draw(screen)
 		pygame.display.update(dirty)
 

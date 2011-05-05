@@ -1,0 +1,22 @@
+Game Design ideas:
+Power ups
+  1. speed
+  2. point multiplier
+  3. special blocks
+Collision blocks
+  1. Random
+  2. Moving
+  3. Different sizes
+Teleport blocks
+  1. random
+  2. cross screen
+Crossblocks
+  1. Random
+  2. Key shortcut
+  3. Limited supply
+Exit pipe
+  1. Unlocked after certain time.
+Moving creatures / Parts
+  1. Turtles!
+Ability to move backwards
+  1. Limited
