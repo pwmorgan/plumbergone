@@ -29,8 +29,10 @@ height = 512
 size = width, height
 white = 255, 255, 255
 black = 0, 0, 0
-#clock = pygame.time.Clock()
 FPS = 60
+p1score = 0
+p2score = 0
+level = 0
 
 #Grid Settings
 cell_size = 35 #pixels
@@ -38,6 +40,7 @@ borderx = (width % cell_size) / 2 + cell_size
 bordery = (height % cell_size) / 2 + cell_size
 cell_count_x = (width - (2 * borderx)) / cell_size
 cell_count_y = (height - (2 * bordery)) / cell_size
+
 
 #Image files
 def load_image(image):
@@ -48,16 +51,19 @@ def load_image(image):
 	surface.set_colorkey(white)
 	return surface
 
+
 def load_pipes(style, direction, filetype):
 	"""Load all the pipes with the specific styles and orientations."""
 	image = "pipes" + "_" + style + "_" + direction + "." + filetype
 	return load_image(image)
+
 
 #Sound files
 class dummysound():
 	"""Class that placeholds and plays an empty sound."""
 	def play(self): 
 		pass
+
 
 def load_sound(sound):
 	"""Load a sound and add it to the mixer."""
@@ -71,6 +77,7 @@ def load_sound(sound):
 		print ('Warning: unable to load %s.' % sound)
 	return dummysound()
 
+
 #Utility Functions
 def round(decimal):
 	"""Convert float to integer; round up or down instead of floor rounding."""
@@ -80,6 +87,7 @@ def round(decimal):
 		return integer
 	else:
 		return integer
+
 
 #UI Classes
 class Button():
@@ -157,10 +165,12 @@ class gameboard():
 		self.previous = deepcopy(self.grid)
 		self.new()
 
+
 class Player():
 	"""The Player class contains all the attributes of the player's object
 	as well as its position, speed, and score."""
-	def __init__(self, number, style, x, y, image, gameboard, previous_entry):
+	def __init__(self, number, style, x, y, score, 
+				 image, gameboard, previous_entry):
 		"""When initializing a player class, you need the player number, pipe
 		sytle, x and y coordinates, player image, the gameboard, and which
 		direction the first player pipe should come from."""
@@ -168,8 +178,9 @@ class Player():
 		#Initial player 
 		self.number = number
 		self.style = style
-		self.score = 0
+		self.score = score
 		self.collision = False
+		self.AI = False
 
 		#Load images
 		self.image = load_image(image)
@@ -272,8 +283,10 @@ class Player():
 			self.score += 1
 			self.previouscell = (row, column)
 		
+
 class Pipe(pygame.sprite.Sprite):
 	images = {}
+
 	def __init__(self, pos, style, direction):
 		pygame.sprite.Sprite.__init__(self, self.containers)
 		self.image = self.images[style][direction]
@@ -282,6 +295,7 @@ class Pipe(pygame.sprite.Sprite):
 
 	def update(self):
 		pass
+
 
 class Score(pygame.sprite.Sprite):
 	def __init__(self, player, x, y):
@@ -296,6 +310,7 @@ class Score(pygame.sprite.Sprite):
 	def update(self):
 		msg = "Player %s: %d" % (self.player.number, self.player.score)
 		self.image = self.font.render(msg, 0, self.color)
+
 
 def start_screen(screen):
 	#Start Screen settings
@@ -327,9 +342,7 @@ def start_screen(screen):
 	newgame.action = _newgame
 	options.action = _options
 	quit.action = _quit
-	
 	buttons = [newgame, options, quit]
-
 	menu_loop = True
 
 	while menu_loop:
@@ -366,14 +379,28 @@ def start_screen(screen):
 
 	return True
 
+
 #Game Logic Functions
-def prep_timer():
-	pass
-	#Rectangle
+class prep_timer():
+	"""Countdown in between levels."""
+	#Draw a rect
+	#Update screen
 	#GAME BEGINS
 	# in 
 	# 3 2 1
 	#Clear
+
+	def __init__():
+		time = 0
+		pause = 3
+
+	def run(self):
+		while time < pause:
+			milliseconds = clock.tick(FPS)
+			countdown = pause - int(time)
+			time += milliseconds / 1000.0
+			#blit count down
+
 
 def end_match(players):
 	for player in players:
@@ -381,14 +408,21 @@ def end_match(players):
 			return False
 	return True
 
+
 def main():
 	#Game Initialization
 	pygame.init()
 	screen = pygame.display.set_mode(size) #,pygame.FULLSCREEN)
+	global level
+	global p1score
+	global p2score
+
 	menu = True
 
-	while menu:
-		menu = start_screen(screen)
+	if level == 0:
+		while menu:
+			menu = start_screen(screen)
+		level += 1
 
 	#Game init
 	playtime = 0
@@ -409,8 +443,8 @@ def main():
 	starty1 = bordery + (cell_size / 2)
 	startx2 = width - startx1
 	starty2 = height - starty1
-	player1 = Player(1, '1', startx1, starty1, player_image, board, 'left')
-	player2 = Player(2, '2', startx2, starty2, player_image, board, 'right')
+	player1 = Player(1, '1', startx1, starty1, p1score, player_image, board, 'left')
+	player2 = Player(2, '2', startx2, starty2, p2score, player_image, board, 'right')
 	player1.movement([1, 0])
 	player2.movement([-1, 0])
 	playerlist = [player1, player2]
@@ -454,12 +488,6 @@ def main():
 		seconds = milliseconds / 1000.0
 		playtime += seconds
 
-		#Record Dirty rects
-		rects = []
-		for player in playerlist:
-			dirtyrect = deepcopy(player.rect) 
-			rects.append(dirtyrect)
-		
 		#Watch for key events.
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -485,10 +513,11 @@ def main():
 				if keystate[K_q]:
 					sys.exit()
 				if keystate[K_r]:
+					level = 0
 					mainloop = False
 
 		#Display FPS
-		pygame.display.set_caption("[FPS]: %.2f" % clock.get_fps())
+		pygame.display.set_caption("Plumbergone . [FPS]: %.2f" % clock.get_fps())
 
 		#Calculate player movement for each player.
 		for player in playerlist:
@@ -500,7 +529,7 @@ def main():
 				#Convert position to integer
 				player.roundx = round(player.x)
 				player.roundy = round(player.y)
-				#Move art to pixels
+				#Move art to x,y pixels
 				player.rect.centerx = player.roundx
 				player.rect.centery = player.roundy
 				screen.blit(player.image, player.rect)
@@ -509,27 +538,20 @@ def main():
 				#Check for pipe adds (collision pipe versus normal pipe)
 				player.check_pipe(player.roundx, player.roundy, board)
 
-		#End match, clean up and next level
-		if end_match(playerlist):
-			#Wait two seconds.
-
-			#load new background
-
-			#reset players
-			for player in playerlist:
-				player.reset()
-
-			#reset board
-			board.store()
-				
 		#Refresh screen and draw all the dirty rects.
 		all.update()
 		pygame.display.flip()  
-		for rect in rects:
-			screen.blit(background, rect)
-		#screen.blit(background, bg_rect)
+		screen.blit(background, bg_rect)
 		dirty = all.draw(screen)
 		pygame.display.update(dirty)
+
+		#End match, clean up and next level
+		if end_match(playerlist):
+			prep_timer()
+			level += 1
+			p1score = player1.score
+			p2score = player2.score
+			mainloop = False
 
 if __name__ == '__main__':
 	program = True
