@@ -8,7 +8,7 @@ April 2011
 
 An arcade game where you lay down pipes across a variety of environments,
 competing for the glorious job of professional plumber. Features art by
-Royce Mclean and sounds from [source].  Written in python and using the
+Royce Mclean and sounds from [source].  Written in python using the
 pygame framework.
 """
 
@@ -107,12 +107,14 @@ class Button():
 				self.image = self.hover
 				if click:
 					self.on_click()
+					#Return True if a click is detected.
 					return True
 			else:
 				self.image = self.up
 		else:
 			self.image = self.up
 
+        #Return false if no click is detected
 		return False
 	
 	def on_click(self):
@@ -169,6 +171,7 @@ class gameboard():
 class Player():
 	"""The Player class contains all the attributes of the player's object
 	as well as its position, speed, and score."""
+
 	def __init__(self, number, style, x, y, score, 
 				 image, gameboard, previous_entry):
 		"""When initializing a player class, you need the player number, pipe
@@ -191,6 +194,8 @@ class Player():
 		self.start = [x, y]
 		self.rect.centerx = x
 		self.rect.centery = y
+		#X and Y are the absolute values.  They get converted
+		#to integers so the rect can be moved to pixel locations.
 		self.x = x
 		self.y = y
 		self.velocity = [0, 0]
@@ -203,7 +208,7 @@ class Player():
 		self.exit = previous_entry
 
 	def reset(self):
-		"""Reset clears the player's velocity and resets the center points."""
+		"""Reset clears the velocity and sets the center points."""
 		self.velocity = [0, 0]
 		self.collision = False
 		self.x = self.start[0]
@@ -297,10 +302,11 @@ class Pipe(pygame.sprite.Sprite):
 		pass
 
 
-class Score(pygame.sprite.Sprite):
-	def __init__(self, player, x, y):
+class Text(pygame.sprite.Sprite):
+	def __init__(self, x, y, text):
 		pygame.sprite.Sprite.__init__(self, self.containers)
-		self.player = player
+		self.text = text
+		self.mode = ''
 		self.font = pygame.font.Font(None, 24)
 		self.font.set_italic(0)
 		self.color = Color('white')
@@ -308,10 +314,14 @@ class Score(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect().move(x, y)
 	
 	def update(self):
-		msg = "Player %s: %d" % (self.player.number, self.player.score)
+		if self.mode == 'score':
+			msg = "Player %s: %d" % (self.player.number, self.player.score)
+		else:
+			msg = self.text
 		self.image = self.font.render(msg, 0, self.color)
 
 
+#Make this a class?
 def start_screen(screen):
 	#Start Screen settings
 	screen = screen
@@ -383,24 +393,47 @@ def start_screen(screen):
 #Game Logic Functions
 class prep_timer():
 	"""Countdown in between levels."""
-	#Draw a rect
-	#Update screen
-	#GAME BEGINS
-	# in 
-	# 3 2 1
-	#Clear
 
-	def __init__():
+	def __init__(self, sprites, clock, screen, update):
+		sprites.empty()
+
+		#Create the background rectangle
+		self.prep_img = load_image('prep_timer.png')
+		self.prep_rect = self.prep_img.get_rect()
+		self.prep_rect.centery = 255
+		self.prep_rect.centerx = width/2
+		#background.blit(background_img, (0, 0))
+		#screen.blit(background, (0,0))
+
+		#Create the lines of text
+		self.line1 = Text(500, 225, 'Game begins')
+		self.line2 = Text(500, 265, '3')
+		self.line2.font = pygame.font.Font(None, 48)
+		self.lines = [self.line1, self.line2]
+		for line in self.lines:
+			line.color = Color('black')
+			line.rect.centerx = width/2
+		self.update = update
+		Text.containers = sprites
+		self.run(sprites, clock, screen)
+
+	def run(self, sprites, clock, screen):
 		time = 0
 		pause = 3
-
-	def run(self):
 		while time < pause:
 			milliseconds = clock.tick(FPS)
-			countdown = pause - int(time)
+			countdown = int(1 + pause - time)
+			self.line2.text = str(countdown)
 			time += milliseconds / 1000.0
-			#blit count down
+            #Update Screen
+			self.update(sprites, self.prep_img, self.prep_rect)
+		#End the timer.
+		self.cleanup()
 
+	def cleanup(self):
+		"""Kills the rectangle and the text sprites."""
+		for line in self.lines:
+			line.kill()
 
 def end_match(players):
 	for player in players:
@@ -472,15 +505,33 @@ def main():
 			Pipe.images[style][key] = Pipe.images[style][other_images[key]]
 
 	pipes = pygame.sprite.Group()
-	scores = pygame.sprite.Group()
+	text = pygame.sprite.Group()
 	all = pygame.sprite.Group()
 	Pipe.containers = pipes, all
-	Score.containers = scores, all
+	Text.containers = text, all
+
+	def screen_update(sprites, background, bg_rect):
+		sprites.update()
+		pygame.display.flip()  
+		screen.blit(background, bg_rect)
+		dirty = sprites.draw(screen)
+		pygame.display.update(dirty)
+
+	#Pause before each level
+	pygame.display.update()  
+	if level == 1:
+		prep_timer(all, clock, screen, screen_update)
 
 	#Set up score
 	if pygame.font:
-		scores.add(Score(player1, 30, 25))
-		scores.add(Score(player2, 900, 25))
+		score1 = Text(30, 25, '')
+		score1.mode = 'score'
+		score1.player = player1
+		score2 = Text(900, 25, '')
+		score2.mode = 'score'
+		score2.player = player2
+		text.add(score1)
+		text.add(score2)
 
 	while mainloop:
 		#Calculate time.
@@ -517,7 +568,8 @@ def main():
 					mainloop = False
 
 		#Display FPS
-		pygame.display.set_caption("Plumbergone . [FPS]: %.2f" % clock.get_fps())
+		pygame.display.set_caption("Plumbergone . [FPS]: %.2f"
+								   % clock.get_fps())
 
 		#Calculate player movement for each player.
 		for player in playerlist:
@@ -539,21 +591,17 @@ def main():
 				player.check_pipe(player.roundx, player.roundy, board)
 
 		#Refresh screen and draw all the dirty rects.
-		all.update()
-		pygame.display.flip()  
-		screen.blit(background, bg_rect)
-		dirty = all.draw(screen)
-		pygame.display.update(dirty)
+		screen_update(all, background, bg_rect)
 
 		#End match, clean up and next level
 		if end_match(playerlist):
-			prep_timer()
+			#if last_frame():
+			prep_timer(all, clock, screen, screen_update)
 			level += 1
 			p1score = player1.score
 			p2score = player2.score
 			mainloop = False
 
 if __name__ == '__main__':
-	program = True
-	while program:
+	while True:
 		main()
