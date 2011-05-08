@@ -121,8 +121,10 @@ class Button():
 		self.image = self.down
 		self.action(self)
 				
+
 class Options():
 	pass
+
 
 #Gameplay Classes
 class gameboard():
@@ -394,7 +396,7 @@ def start_screen(screen):
 class prep_timer():
 	"""Countdown in between levels."""
 
-	def __init__(self, sprites, clock, screen, update):
+	def __init__(self, sprites, clock, screen, update, mode=''):
 		sprites.empty()
 
 		#Create the background rectangle
@@ -406,16 +408,33 @@ class prep_timer():
 		#screen.blit(background, (0,0))
 
 		#Create the lines of text
-		self.line1 = Text(500, 225, 'Game begins')
-		self.line2 = Text(500, 265, '3')
-		self.line2.font = pygame.font.Font(None, 48)
-		self.lines = [self.line1, self.line2]
+		self.lines = []
+		if mode == 'gameover':
+			if p1score > p2score:
+				winner = 'Player 1 wins!'
+			elif p1score == p2score:
+				winner = 'Tie!'
+			else:
+				winner = 'Player 2 wins!'
+			self.line1 = Text(500, 225, 'Game over')
+			self.line2 = Text(500, 265, winner)
+			self.lines.append(self.line1)
+			self.lines.append(self.line2)
+		else:
+			self.line1 = Text(500, 225, 'Game begins')
+			self.line2 = Text(500, 265, '3')
+			self.line2.font = pygame.font.Font(None, 48)
+			self.lines.append(self.line1)
+			self.lines.append(self.line2)
 		for line in self.lines:
 			line.color = Color('black')
 			line.rect.centerx = width/2
 		self.update = update
 		Text.containers = sprites
-		self.run(sprites, clock, screen)
+		if mode == 'gameover':
+			self.gameover(sprites, screen)
+		else:
+			self.run(sprites, clock, screen)
 
 	def run(self, sprites, clock, screen):
 		time = 0
@@ -428,6 +447,19 @@ class prep_timer():
             #Update Screen
 			self.update(sprites, self.prep_img, self.prep_rect)
 		#End the timer.
+		self.cleanup()
+	
+	def gameover(self, sprites, screen):
+		loop = True
+		while loop:
+			self.update(sprites, self.prep_img, self.prep_rect)
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					sys.exit()
+				if event.type == pygame.KEYDOWN:
+					keystate = pygame.key.get_pressed()
+					if keystate[K_RETURN]:
+						loop = False
 		self.cleanup()
 
 	def cleanup(self):
@@ -522,16 +554,19 @@ def main():
 	if level == 1:
 		prep_timer(all, clock, screen, screen_update)
 
-	#Set up score
-	if pygame.font:
-		score1 = Text(30, 25, '')
-		score1.mode = 'score'
-		score1.player = player1
-		score2 = Text(900, 25, '')
-		score2.mode = 'score'
-		score2.player = player2
-		text.add(score1)
-		text.add(score2)
+	#Set up text
+	score1 = Text(30, 25, '')
+	score1.mode = 'score'
+	score1.player = player1
+	score2 = Text(900, 25, '')
+	score2.mode = 'score'
+	score2.player = player2
+	leveltext = Text(500, 20, 'Level ' + str(level))
+	leveltext.rect.centerx = width/2
+	leveltext.font = pygame.font.Font(None, 36)
+	text.add(score1)
+	text.add(score2)
+	text.add(leveltext)
 
 	while mainloop:
 		#Calculate time.
@@ -595,12 +630,17 @@ def main():
 
 		#End match, clean up and next level
 		if end_match(playerlist):
-			#if last_frame():
-			prep_timer(all, clock, screen, screen_update)
-			level += 1
 			p1score = player1.score
 			p2score = player2.score
-			mainloop = False
+			if level == 10:
+				prep_timer(all, clock, screen, screen_update, 'gameover')
+				level = 0
+				mainloop = False
+			else:
+			#if last_frame():
+				prep_timer(all, clock, screen, screen_update)
+				level += 1
+				mainloop = False
 
 if __name__ == '__main__':
 	while True:
