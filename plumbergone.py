@@ -12,6 +12,7 @@ Royce Mclean and sounds from [source].  Written in python using the
 pygame framework.
 """
 
+
 #Import Modules
 import os
 import sys
@@ -56,6 +57,39 @@ def load_pipes(style, direction, filetype):
 	"""Load all the pipes with the specific styles and orientations."""
 	image = "pipes" + "_" + style + "_" + direction + "." + filetype
 	return load_image(image)
+
+
+#Load level files
+def load_level(level_file):
+	"""Load the image and convert it to a surface."""
+	full_path = os.path.join(main_dir, 'levels', level_file)
+	raw_level = file(full_path, 'r')
+	done = False
+	#Parse the level file
+	main_layer = []
+	sub_layer = []
+	while not done:	
+		line = raw_level.readline()
+		if line[:5] == 'LEVEL':
+			line = raw_level.readline()
+			while line[:3] != 'END':			
+				row = line.split(' ')
+				main_layer.append(row)
+				line = raw_level.readline()
+		elif line[:8] == 'SUBLEVEL':
+			line = raw_level.readline()
+			while line[:3] != 'END':			
+				row = line.split(' ')
+				sub_layer.append(row)
+				line = raw_level.readline()
+			done = True
+	#Scrub the gameboard lists
+	for board in (main_layer, sub_layer):
+		for row in range(len(board)):
+			for cell in range(len(board[row])):
+				board[row][cell] = board[row][cell][0] 
+	raw_level.close()
+	return main_layer, sub_layer
 
 
 #Sound files
@@ -134,8 +168,46 @@ class gameboard():
 		self.x = x
 		self.y = y
 		self.new()
-		self.previous = []
-		self.lowest = []
+
+	def create_level(self, level):
+		level_key = {'V':'pipes_3_upup.png',  #vertical upup pipe
+					 'H':'pipes_3_leftleft.png',  #horizontal leftleft pipe
+					 'U':'pipes_3_upcenter.png',  #upcenter pipe
+					 'D':'pipes_3_downcenter.png',  #downcenter pipe
+					 'L':'pipes_3_leftcenter.png',  #leftcenter pipe
+					 'R':'pipes_3_rightcenter.png',  #rightcenter pipe
+					 'C':'pipes_3_centercenter.png',  #centercenter pipe
+					 'v':'gates_upup.png',  #vertical gate
+					 'h':'gates_leftleft.png',  #horizontal gate
+					 'X':'blocks_01.png',  #random collision block
+					 '1':'powerups_01.png',  #powerup 1
+					 '2':'powerups_02.png',  #powerup 2
+					 '3':'powerups_03.png',  #powerup 3
+					 'a':'doodads_01.png',  #doodad 1
+					 #'b':'doodads_02.png',  #doodad 2
+					 #'c':'doodads_03.png',  #doodad 3
+					 }
+
+		layers = load_level('level%d.txt' % level) 
+		#Grids that contain a full representation of each layer.
+		self.main_layer = layers[0]
+		self.sub_layer = layers[1] 
+		#Empty lists for the active images on each layer.
+		self.active = []
+		#Convert layers from abstract data to the images for loading.
+		for layer in layers:
+			for row in range(len(layer)):
+				for col in range(len(layer[row])):
+					if layer[row][col] != '0':
+						key = layer[row][col]
+						if layer == self.sub_layer:
+							x, y = self.pos(row-1, col-1)
+						else:
+							x, y = self.pos(row, col)
+							#Add a collision obj on grid.
+							self.grid[row][col] = 'X'
+						layer[row][col] = Doodad(level_key[key], x, y)
+						self.active.append(layer[row][col])
 
 	def new(self):
 		x = self.x
@@ -145,6 +217,7 @@ class gameboard():
 			self.grid.append([])
 			for column in range(x):
 				self.grid[row].append(0)
+		self.create_level(level)
 	
 	def pos(self, row, column):
 		x = borderx + column * cell_size
@@ -169,6 +242,14 @@ class gameboard():
 		self.previous = deepcopy(self.grid)
 		self.new()
 
+class Doodad():
+	def __init__(self, image, x, y):
+		self.image = load_image(image)
+		self.image.set_colorkey(white)
+
+		#Screen placement
+		self.rect = self.image.get_rect()
+		self.rect.topleft = x, y
 
 class Player():
 	"""The Player class contains all the attributes of the player's object
@@ -549,6 +630,8 @@ def main():
 		sprites.update()
 		pygame.display.flip()  
 		screen.blit(background, bg_rect)
+		for item in board.active:
+			screen.blit(item.image, item.rect)
 		dirty = sprites.draw(screen)
 		pygame.display.update(dirty)
 
