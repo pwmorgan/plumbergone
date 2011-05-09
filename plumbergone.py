@@ -529,7 +529,7 @@ class prep_timer():
 			self.line2.text = str(countdown)
 			time += milliseconds / 1000.0
             #Update Screen
-			self.update(sprites, self.prep_img, self.prep_rect)
+			self.update(sprites, None, None, self.prep_img, self.prep_rect)
 		#End the timer.
 		self.cleanup()
 	
@@ -626,12 +626,17 @@ def main():
 	Pipe.containers = pipes, all
 	Text.containers = text, all
 
-	def screen_update(sprites, background, bg_rect):
-		sprites.update()
+	def screen_update(sprites, background=None, bg_rect=None,
+					  foreground=None, fg_rect=None):
+		#sprites.update()
 		pygame.display.flip()  
-		screen.blit(background, bg_rect)
+		if background:
+			screen.blit(background, bg_rect)
 		for item in board.active:
 			screen.blit(item.image, item.rect)
+		sprites.update()
+		if foreground:
+			screen.blit(foreground, fg_rect)
 		dirty = sprites.draw(screen)
 		pygame.display.update(dirty)
 
