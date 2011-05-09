@@ -80,7 +80,7 @@ def load_sound(sound):
 
 #Utility Functions
 def round(decimal):
-	"""Convert float to integer; round up or down instead of floor rounding."""
+	"""Round a float instead of truncating the decimal."""
 	integer = int(decimal)
 	if (decimal - integer) >= .5:
 		integer += 1
@@ -421,7 +421,10 @@ class prep_timer():
 			self.lines.append(self.line1)
 			self.lines.append(self.line2)
 		else:
-			self.line1 = Text(500, 225, 'Game begins')
+			if level == 1:
+				self.line1 = Text(500, 225, 'Game begins:')
+			else:
+				self.line1 = Text(500, 225, 'Next level:')
 			self.line2 = Text(500, 265, '3')
 			self.line2.font = pygame.font.Font(None, 48)
 			self.lines.append(self.line1)
@@ -637,9 +640,8 @@ def main():
 				level = 0
 				mainloop = False
 			else:
-			#if last_frame():
-				prep_timer(all, clock, screen, screen_update)
 				level += 1
+				prep_timer(all, clock, screen, screen_update)
 				mainloop = False
 
 if __name__ == '__main__':
