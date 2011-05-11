@@ -65,9 +65,9 @@ def load_level(level_file):
 	full_path = os.path.join(main_dir, 'levels', level_file)
 	raw_level = file(full_path, 'r')
 	done = False
-	#Parse the level file
-	main_layer = []
-	sub_layer = []
+	#Parse the raw level file
+	main_layer = [] #Top art level with collisions
+	sub_layer = [] #Bottom level without collisions
 	while not done:	
 		line = raw_level.readline()
 		if line[:5] == 'LEVEL':
@@ -135,6 +135,7 @@ class Button():
 		self.image = self.up
 
 	def status(self, screen, pos, click):
+		"""Check whether the button has been clicked."""
 		screen.blit(self.up, self.rect)
 		if self.rect.top < pos[1] < self.rect.bottom:
 			if self.rect.left < pos[0] < self.rect.right:
@@ -152,6 +153,7 @@ class Button():
 		return False
 	
 	def on_click(self):
+		"""Play the click animation and run the button action."""
 		self.image = self.down
 		self.action(self)
 				
@@ -188,6 +190,7 @@ class gameboard():
 					 #'c':'doodads_03.png',  #doodad 3
 					 }
 
+		#Load the current level as a list of layers
 		layers = load_level('level%d.txt' % level) 
 		#Grids that contain a full representation of each layer.
 		self.main_layer = layers[0]
@@ -210,6 +213,7 @@ class gameboard():
 						self.active.append(layer[row][col])
 
 	def new(self):
+		"""Create a new gameboard using row and column count."""
 		x = self.x
 		y = self.y
 		self.grid = []
@@ -220,14 +224,17 @@ class gameboard():
 		self.create_level(level)
 	
 	def pos(self, row, column):
+		"""Given a row and column, this returns a tuple of x and y coords."""
 		x = borderx + column * cell_size
 		y = bordery + row * cell_size
 		return x, y
 
 	def row(self, y):
+		"""Given a y coordinate, this returns the row of the coord."""
 		return int((y - bordery) / cell_size)
 
 	def column(self, x):
+		"""Given a x coordinate, this returns the column of the coord."""
 		return int((x - borderx) / cell_size)
 
 	def add_pipe(self, player_number, row, column):
@@ -242,7 +249,11 @@ class gameboard():
 		self.previous = deepcopy(self.grid)
 		self.new()
 
+	def gamestate(self):
+		pass
+
 class Doodad():
+	"""Adds an art item to the screen with an image file and x,y coord."""
 	def __init__(self, image, x, y):
 		self.image = load_image(image)
 		self.image.set_colorkey(white)
@@ -355,7 +366,7 @@ class Player():
 			self.exit = 'center'
 			#Decide if the end pipe should go in the current cell or the previous cell
 			#Add end pipe
-			gameboard.add_pipe(self.number, row, column) #add entry, exit?
+			gameboard.add_pipe(self.number, self.previouscell[0], self.previouscell[1]) #add entry, exit?
 			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
 				 self.style, self.entry + self.exit)
 
@@ -382,6 +393,7 @@ class Pipe(pygame.sprite.Sprite):
 		#print "New", direction, "pipe at", pos[0], pos[1]
 
 	def update(self):
+		"""Leave update empty so that Pipe can work as a sprite."""
 		pass
 
 
@@ -521,6 +533,7 @@ class prep_timer():
 			self.run(sprites, clock, screen)
 
 	def run(self, sprites, clock, screen):
+		"""Run the count down timer."""
 		time = 0
 		pause = 3
 		while time < pause:
@@ -534,6 +547,7 @@ class prep_timer():
 		self.cleanup()
 	
 	def gameover(self, sprites, screen):
+		"""Run the gameover screen."""
 		loop = True
 		while loop:
 			self.update(sprites, self.prep_img, self.prep_rect)
