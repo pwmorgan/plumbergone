@@ -130,15 +130,16 @@ class Button():
 		self.up = load_image(up)
 		self.hover = load_image(hover)
 		self.down = load_image(down)
-		self.rect = self.up.get_rect()
+		self.rect = self.down.get_rect()
 		self.rect.bottomleft = (y, x)
 		self.image = self.up
+		self.clickrect = self.rect #Defaults to containing the rect as the clickable area.
 
 	def status(self, screen, pos, click):
 		"""Check whether the button has been clicked."""
 		screen.blit(self.up, self.rect)
-		if self.rect.top < pos[1] < self.rect.bottom:
-			if self.rect.left < pos[0] < self.rect.right:
+		if self.clickrect.top < pos[1] < self.clickrect.bottom:
+			if self.clickrect.left < pos[0] < self.clickrect.right:
 				self.image = self.hover
 				if click:
 					self.on_click()
@@ -437,12 +438,15 @@ def start_screen(screen):
 		return True
 
 	#Load Buttons
-	options = Button(512, 150, 'options_off.png', 
+	options = Button(512, 287, 'empty.png', 
                      'options_on.png', 'options_on.png') 
-	newgame = Button(512, 425, 'newgame_off.png', 
+	newgame = Button(512, 0, 'empty.png', 
                      'newgame_on.png', 'newgame_on.png') 
-	quit = Button(512, 650, 'quit_off.png', 
-                  'quit_on.png', 'options_on.png') 
+	quit = Button(512, 640, 'empty.png', 
+                  'quit_on.png', 'quit_on.png') 
+	newgame.clickrect = Rect((0, 208), (287, 304))
+	options.clickrect = Rect((287, 256), (352, 256))
+	quit.clickrect = Rect((640,225), (384,287))
 	newgame.start = False
 	newgame.action = _newgame
 	options.action = _options
@@ -601,7 +605,7 @@ def main():
 	screen.blit(background, (0,0))
 
 	#Establish players and starting positions
-	player_image = "player.bmp"
+	player_image = "player.png"
 	startx1 = borderx + (cell_size / 2)
 	starty1 = bordery + (cell_size / 2)
 	startx2 = width - startx1
