@@ -1,0 +1,52 @@
+LEVEL
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+0 0 0 0 X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X 0 0 0
+0 0 0 0 0 0 0 X 0 0 0 0 0 0 0 0 0 0 0 0 X 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 X 0 0 0 0 0 0 X 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 X h X 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 v 0 v 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 v 0 v 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 X h X 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 X 0 0 0 0 0 0 X 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 X 0 0 0 0 0 0 0 0 0 0 0 0 X 0 0 0 0 0 0 0
+0 0 0 X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X 0 0 0 0
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+END
+
+SUBLEVEL
+X X X X X X X X X X X X X X X X X X X X X X X X X X X X X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 C 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 C 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 X
+X X X X X X X X X X X X X X X X X X X X X X X X X X X X X
+END
+
+"""
+KEY:
+-  Empty collision square
+V  vertical upup pipe
+H  horizontal leftleft pipe
+C  centercenter pipe
+U  upcenter pipe
+D  downcenter pipe
+L  leftcenter pipe
+R  rightcenter pipe
+v  temporary vertical gateway
+h  temporary horizontal gateway
+X  random collision block
+1  powerup 1
+2  powerup 2
+3  powerup 3
+a  doodad 1
+b  doodad 2
+c  doodad 3
+"""
