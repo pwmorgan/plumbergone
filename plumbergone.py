@@ -21,7 +21,7 @@ from pygame.locals import *
 from copy import deepcopy
 
 #Import game settings       
-from image_files import image_list, other_images 
+from image_files import * 
 
 #Global Game Settings
 main_dir = os.path.split(os.path.abspath(__file__))[0]
@@ -37,10 +37,10 @@ level = 0
 
 #Grid Settings
 cell_size = 35 #pixels
-borderx = (width % cell_size) / 2 + cell_size
-bordery = (height % cell_size) / 2 + cell_size
-cell_count_x = (width - (2 * borderx)) / cell_size
-cell_count_y = (height - (2 * bordery)) / cell_size
+borderx = (width % cell_size) / 2 #+ cell_size
+bordery = (height % cell_size) / 2 #+ cell_size
+cell_count_x = width / cell_size
+cell_count_y = height / cell_size
 
 
 #Image files
@@ -61,13 +61,12 @@ def load_pipes(style, direction, filetype):
 
 #Load level files
 def load_level(level_file):
-	"""Load the image and convert it to a surface."""
+	"""Load the level txt file and convert it into layers of assets."""
 	full_path = os.path.join(main_dir, 'levels', level_file)
 	raw_level = file(full_path, 'r')
 	done = False
 	#Parse the raw level file
 	main_layer = [] #Top art level with collisions
-	sub_layer = [] #Bottom level without collisions
 	while not done:	
 		line = raw_level.readline()
 		if line[:5] == 'LEVEL':
@@ -76,20 +75,14 @@ def load_level(level_file):
 				row = line.split(' ')
 				main_layer.append(row)
 				line = raw_level.readline()
-		elif line[:8] == 'SUBLEVEL':
-			line = raw_level.readline()
-			while line[:3] != 'END':			
-				row = line.split(' ')
-				sub_layer.append(row)
-				line = raw_level.readline()
 			done = True
+
 	#Scrub the gameboard lists
-	for board in (main_layer, sub_layer):
-		for row in range(len(board)):
-			for cell in range(len(board[row])):
-				board[row][cell] = board[row][cell][0] 
+	for row in range(len(main_layer)):
+		for cell in range(len(main_layer[row])):
+			main_layer[row][cell] = main_layer[row][cell][0] 
 	raw_level.close()
-	return main_layer, sub_layer
+	return main_layer #, sub_layer
 
 
 #Sound files
@@ -126,7 +119,7 @@ def round(decimal):
 #UI Classes
 class Button():
 	"""The button class controls the different states of the button image as well as the click event."""
-	def __init__(self, x, y, up, hover, down):
+	def __init__(self, x, y, up='empty.png', hover='empty.png', down='empty.png'):
 		self.up = load_image(up)
 		self.hover = load_image(hover)
 		self.down = load_image(down)
@@ -164,54 +157,32 @@ class Options():
 
 
 #Gameplay Classes
-class gameboard():
+class Gameboard():
 	"""The gameboard class contains logic for storing the current game state and for detecting collisions. Also contains functions for determining positions of players."""
 
 	def __init__(self, x, y):
-		self.x = x
-		self.y = y
+		self.x = x #Rows
+		self.y = y #Columns
 		self.new()
 
 	def create_level(self, level):
-		level_key = {'V':'pipes_3_upup.png',  #vertical upup pipe
-					 'H':'pipes_3_leftleft.png',  #horizontal leftleft pipe
-					 'U':'pipes_3_upcenter.png',  #upcenter pipe
-					 'D':'pipes_3_downcenter.png',  #downcenter pipe
-					 'L':'pipes_3_leftcenter.png',  #leftcenter pipe
-					 'R':'pipes_3_rightcenter.png',  #rightcenter pipe
-					 'C':'pipes_3_centercenter.png',  #centercenter pipe
-					 'v':'gates_upup.png',  #vertical gate
-					 'h':'gates_leftleft.png',  #horizontal gate
-					 'X':'blocks_01.png',  #random collision block
-					 '1':'powerups_01.png',  #powerup 1
-					 '2':'powerups_02.png',  #powerup 2
-					 '3':'powerups_03.png',  #powerup 3
-					 'a':'doodads_01.png',  #doodad 1
-					 #'b':'doodads_02.png',  #doodad 2
-					 #'c':'doodads_03.png',  #doodad 3
-					 }
-
-		#Load the current level as a list of layers
-		layers = load_level('level%d.txt' % level) 
-		#Grids that contain a full representation of each layer.
-		self.main_layer = layers[0]
-		self.sub_layer = layers[1] 
+		"""Load the current level as a list of layers."""
+		#A list of all the power-up keys on the board.
+		self.powerups = ['1', '2', '3', 'C', 'U', 'D', 'L', 'R']
+		grid = load_level('level%d.txt' % level) 
+		#self.grid = deepcopy(grid)
 		#Empty lists for the active images on each layer.
 		self.active = []
-		#Convert layers from abstract data to the images for loading.
-		for layer in layers:
-			for row in range(len(layer)):
-				for col in range(len(layer[row])):
-					if layer[row][col] != '0':
-						key = layer[row][col]
-						if layer == self.sub_layer:
-							x, y = self.pos(row-1, col-1)
-						else:
-							x, y = self.pos(row, col)
-							#Add a collision obj on grid.
-							self.grid[row][col] = 'X'
-						layer[row][col] = Doodad(level_key[key], x, y)
-						self.active.append(layer[row][col])
+		#Convert layer from abstract data to the images for loading.
+		for row in range(len(grid)):
+			for col in range(len(grid[row])):
+				if grid[row][col] != '0':
+					key = grid[row][col]
+					x, y = self.pos(row, col)
+					#Add a collision obj on grid.
+					#self.grid[row][col] = key #This will be useful for AI and collision detection
+					grid[row][col] = Doodad(level_key[key], x, y)
+					self.active.append(grid[row][col])
 
 	def new(self):
 		"""Create a new gameboard using row and column count."""
@@ -221,7 +192,7 @@ class gameboard():
 		for row in range(y):
 			self.grid.append([])
 			for column in range(x):
-				self.grid[row].append(0)
+				self.grid[row].append('0')
 		self.create_level(level)
 	
 	def pos(self, row, column):
@@ -250,8 +221,6 @@ class gameboard():
 		self.previous = deepcopy(self.grid)
 		self.new()
 
-	def gamestate(self):
-		pass
 
 class Doodad():
 	"""Adds an art item to the screen with an image file and x,y coord."""
@@ -349,7 +318,10 @@ class Player():
 			return True
 		elif column >= len(gameboard.grid[row]):
 			return True
-		elif gameboard.grid[row][column] != 0:
+		elif gameboard.grid[row][column] in gameboard.powerups:
+			self.powerup(gameboard.grid[row][column])
+			return False
+		elif gameboard.grid[row][column] != '0':
 			return True
 		else:
 		   	return False
@@ -365,7 +337,6 @@ class Player():
 		if self.collision:
 			#self.record_entry()
 			self.exit = 'center'
-			#Decide if the end pipe should go in the current cell or the previous cell
 			#Add end pipe
 			gameboard.add_pipe(self.number, self.previouscell[0], self.previouscell[1]) #add entry, exit?
 			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
@@ -594,7 +565,7 @@ def main():
 	#Game init
 	playtime = 0
 	mainloop = True
-	board = gameboard(cell_count_x, cell_count_y)
+	board = Gameboard(cell_count_x, cell_count_y)
 	clock = pygame.time.Clock()
 
 	#Draw the background
@@ -607,9 +578,9 @@ def main():
 	#Establish players and starting positions
 	player_image = "player.png"
 	startx1 = borderx + (cell_size / 2)
-	starty1 = bordery + (cell_size / 2)
+	starty1 = bordery + (cell_size / 2) + cell_size #Starts 2 cells down
 	startx2 = width - startx1
-	starty2 = height - starty1
+	starty2 = height - starty1 + cell_size
 	player1 = Player(1, '1', startx1, starty1, p1score, player_image, board, 'left')
 	player2 = Player(2, '2', startx2, starty2, p2score, player_image, board, 'right')
 	player1.movement([1, 0])
@@ -632,11 +603,11 @@ def main():
 
 	for style in pipe_styles:
 		Pipe.images[style] = {}
-		for pipe_type in image_list:
+		for pipe_type in pipe_list:
 			Pipe.images[style][pipe_type] = load_pipes(style, pipe_type, 'png')
-		secondary = other_images.keys()
+		secondary = other_pipes.keys()
 		for key in secondary:
-			Pipe.images[style][key] = Pipe.images[style][other_images[key]]
+			Pipe.images[style][key] = Pipe.images[style][other_pipes[key]]
 
 	pipes = pygame.sprite.Group()
 	text = pygame.sprite.Group()
@@ -691,18 +662,19 @@ def main():
 				keystate = pygame.key.get_pressed()
 				for player in playerlist:
 					#Check previous entrypoint to prevent self crashes.
-					if keystate[player.up]:
-						if player.entry != 'up':
-							player.movement([0, -1])
-					elif keystate[player.down]:
-						if player.entry != 'down':
-							player.movement([0, 1])
-					elif keystate[player.right]:
-						if player.entry != 'right':
-							player.movement([1, 0])
-					elif keystate[player.left]:
-						if player.entry != 'left':
-							player.movement([-1, 0])
+					if not player.AI:
+						if keystate[player.up]:
+							if player.entry != 'up':
+								player.movement([0, -1])
+						elif keystate[player.down]:
+							if player.entry != 'down':
+								player.movement([0, 1])
+						elif keystate[player.right]:
+							if player.entry != 'right':
+								player.movement([1, 0])
+						elif keystate[player.left]:
+							if player.entry != 'left':
+								player.movement([-1, 0])
 				if keystate[K_g]:
 					print board.grid
 				if keystate[K_q]:
