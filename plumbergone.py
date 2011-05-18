@@ -44,12 +44,13 @@ cell_count_y = height / cell_size
 
 
 #Image files
-def load_image(image):
+def load_image(image, transparency=white):
 	"""Load the image and convert it to a surface."""
 	image = os.path.join(main_dir, 'media', image)
 	surface = pygame.image.load(image)
 	surface = surface.convert()
-	surface.set_colorkey(white)
+	if transparency:
+		surface.set_colorkey(transparency)
 	return surface
 
 
@@ -180,7 +181,7 @@ class Gameboard():
 					key = grid[row][col]
 					x, y = self.pos(row, col)
 					#Add a collision obj on grid.
-					#self.grid[row][col] = key #This will be useful for AI and collision detection
+					self.grid[row][col] = key #This will be useful for AI and collision detection
 					grid[row][col] = Doodad(level_key[key], x, y)
 					self.active.append(grid[row][col])
 
@@ -195,7 +196,7 @@ class Gameboard():
 				self.grid[row].append('0')
 		self.create_level(level)
 	
-	def pos(self, row, column):
+	def pos(self, row=0, column=0):
 		"""Given a row and column, this returns a tuple of x and y coords."""
 		x = borderx + column * cell_size
 		y = bordery + row * cell_size
@@ -215,12 +216,21 @@ class Gameboard():
 		except IndexError:
 			#Out of list range means no pipe gets added.
 			pass
-				
+	
 	def store(self):
 		self.lowest = deepcopy(self.previous)
 		self.previous = deepcopy(self.grid)
 		self.new()
 
+	def midpoint(self, point, direction):
+		if direction == "y":
+			y = self.pos(row = point)
+			y = y[1] + (cell_size / 2)
+			return y
+		elif direction == "x":
+			x = self.pos(column = point)
+			x = x[0] + (cell_size / 2)
+			return x
 
 class Doodad():
 	"""Adds an art item to the screen with an image file and x,y coord."""
@@ -248,6 +258,7 @@ class Player():
 		self.score = score
 		self.collision = False
 		self.AI = False
+		self.tblock = 0
 
 		#Load images
 		self.image = load_image(image)
@@ -319,12 +330,63 @@ class Player():
 		elif column >= len(gameboard.grid[row]):
 			return True
 		elif gameboard.grid[row][column] in gameboard.powerups:
-			self.powerup(gameboard.grid[row][column])
+			self.powerup(gameboard, row, column)
 			return False
 		elif gameboard.grid[row][column] != '0':
 			return True
 		else:
 		   	return False
+	
+	def powerup(self, gameboard, row, column):
+		item = gameboard.grid[row][column]
+		#Remove collision object
+		gameboard.grid[row][column] = '0'
+		if item == "1":
+			#Increase player speed by 10%
+			self.speed *= 1.5
+			self.velocity = [self.velocity[0]*1.5, self.velocity[1]*1.5]
+			#print self.speed, self.velocity
+		elif item == "2":
+			#Give player 3 t-blocks
+			self.tblock += 3
+		elif item == "3":
+			#Power up 3: crazy controls?
+			pass	
+		elif item == "C":
+			pass	
+		elif item in ["R", "U", "D", "L"]:
+			#Create an center facing pipe on one side.
+			row = gameboard.row(self.y)
+			column = gameboard.column(self.x)
+			self.currentcell = (row, column)
+			gameboard.add_pipe(self.number, row, column)
+			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
+			Pipe(gameboard.pos(row, column), self.style, "center" + opposite[self.entry])
+
+			#Send player to opposite side of the screen
+			teleport = {"L": ([-1, 0], len(gameboard.grid[0])-1), 
+						"R": ([1, 0], 0),
+						"U": ([0, -1], len(gameboard.grid)-1),
+						"D": ([0, 1], 1)}
+			if item == "L" or item == "R":
+				self.y = gameboard.midpoint(row, "y")
+				self.x = gameboard.midpoint(teleport[item][1], "x")
+			else:	
+				self.y = gameboard.midpoint(teleport[item][1], "y")
+				self.x = gameboard.midpoint(column, "x")
+
+			self.entry = "center"
+			self.exit = "center"
+			row = gameboard.row(self.y)
+			column = gameboard.column(self.x)
+			self.currentcell = (row, column)
+			self.previouscell = self.currentcell
+			gameboard.grid[row][column] = '0'
+
+			#Change the player direction if necessary.
+			self.movement(teleport[item][0])
+
+			#Find a way to remove powerup from the graphics layer
 
 	def check_pipe(self, x, y, gameboard):
 		#Set the current row and column
@@ -392,11 +454,17 @@ class Text(pygame.sprite.Sprite):
 def start_screen(screen):
 	#Start Screen settings
 	screen = screen
-	background_img = load_image('startscreen1.png')
+	background_img = load_image('startscreen1.png', None)
 	bg_rect = Rect(0, 0, width, height)
 	background = pygame.Surface((width, height))
 	background.blit(background_img, (0, 0))
 	screen.blit(background, (0,0))
+
+	#Reset the scores at the beginning of each game.
+	global p1score
+	global p2score
+	p1score = 0
+	p2score = 0
 	
 	def _quit(self):
 		sys.exit()
@@ -701,10 +769,10 @@ def main():
 				player.rect.centerx = player.roundx
 				player.rect.centery = player.roundy
 				screen.blit(player.image, player.rect)
-				#Check for collisions
-				player.collision = player.check_collision(player.roundx, player.roundy, board)
 				#Check for pipe adds (collision pipe versus normal pipe)
 				player.check_pipe(player.roundx, player.roundy, board)
+				#Check for collisions
+				player.collision = player.check_collision(player.roundx, player.roundy, board)
 
 		#Refresh screen and draw all the dirty rects.
 		screen_update(all, background, bg_rect)
