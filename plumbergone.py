@@ -159,13 +159,14 @@ class Options():
 
 #Gameplay Classes
 class Gameboard():
-	"""The gameboard class contains logic for storing the current game state and for detecting collisions. Also contains functions for determining positions of players."""
+	"""The gameboard class contains logic for storing the current game state 
+	and for detecting collisions. Also contains functions for determining 
+	positions of players."""
 
 	def __init__(self, x, y):
 		self.x = x #Rows
 		self.y = y #Columns
-		self.pipes = []
-		self.new()
+		self.new(x, y)
 
 	def create_level(self, level):
 		"""Load the current level as a list of layers."""
@@ -186,15 +187,15 @@ class Gameboard():
 					grid[row][col] = Doodad(level_key[key], x, y)
 					self.active.append(grid[row][col])
 
-	def new(self):
+	def new(self, x, y):
 		"""Create a new gameboard using row and column count."""
-		x = self.x
-		y = self.y
 		self.grid = []
+		self.pipes = []
 		for row in range(y):
 			self.grid.append([])
 			for column in range(x):
 				self.grid[row].append('0')
+		#self.pipes = deepcopy(self.grid)
 		self.create_level(level)
 	
 	def pos(self, row=0, column=0):
@@ -218,10 +219,13 @@ class Gameboard():
 			#Out of list range means no pipe gets added.
 			pass
 	
+	"""
+	#Unused grid store command.
 	def store(self):
 		self.lowest = deepcopy(self.previous)
 		self.previous = deepcopy(self.grid)
 		self.new()
+	"""
 
 	def midpoint(self, point, direction):
 		if direction == "y":
@@ -344,21 +348,28 @@ class Player():
 		gameboard.grid[row][column] = '0'
 		if item == "1":
 			#Increase player speed by 10%
-			self.speed *= 1.5
-			self.velocity = [self.velocity[0]*1.5, self.velocity[1]*1.5]
+			self.speed *= 1.4
+			self.velocity = [self.velocity[0]*1.4, self.velocity[1]*1.4]
 			#print self.speed, self.velocity
 		elif item == "2":
 			#Give player 3 t-blocks
 			self.tblock += 3
 		elif item == "3":
 			#Power up 3: crazy controls?
-			pass	
+			self.up, self.down = self.down, self.up 
+			self.left, self.right = self.right, self.left
 		elif item == "C":
-			pass	
+			#Final pipe
+			self.score += 100
+			self.currentcell = (row, column)
+			gameboard.add_pipe(self.number, row, column)
+			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
+			Pipe(gameboard, gameboard.pos(row, column), self.style, "center" + opposite[self.entry])
+			self.collision = True
 		elif item in ["R", "U", "D", "L"]:
 			#Create an center facing pipe on one side.
-			row = gameboard.row(self.y)
-			column = gameboard.column(self.x)
+			#row = gameboard.row(self.y)
+			#column = gameboard.column(self.x)
 			self.currentcell = (row, column)
 			gameboard.add_pipe(self.number, row, column)
 			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
@@ -384,12 +395,13 @@ class Player():
 			self.previouscell = self.currentcell
 			gameboard.grid[row][column] = '0'
 
-			#Change the player direction if necessary.
+			#Change the player direction.
 			self.movement(teleport[item][0])
 
 			#Find a way to remove powerup from the graphics layer
 
 	def check_pipe(self, x, y, gameboard):
+		"""Checks the players current position and then creates a pipe as the player exits a cell."""
 		#Set the current row and column
 		row = gameboard.row(y)
 		column = gameboard.column(x)
@@ -419,18 +431,24 @@ class Player():
 		
 
 class Pipe():
+	"""The Pipe class contains a list of all pipe orientations and creates an appropriate image when called."""
 	images = {}
+	#The following takes data from an file that contains pipe orientations.
+	for pipe in pipe_list:
+		images[pipe] = pipe
+	secondary = other_pipes.keys()
+	for pipe in secondary:
+		images[pipe] = other_pipes[pipe]
 
 	def __init__(self, board, pos, style, direction):
-		self.image = self.images[style][direction]
+		direction = self.images[direction]
+		self.image = load_pipes(style, direction, 'png')
 		self.rect = self.image.get_rect(topleft=pos)
-		#print "New", direction, "pipe at", pos[0], pos[1]
-
-		#grid[row][col] = Doodad(level_key[key], x, y)
 		board.pipes.append(self)
 
 
 class Text(pygame.sprite.Sprite):
+	"""The Text class is a Sprite class that displays words on the screen when updated."""
 	def __init__(self, x, y, text):
 		pygame.sprite.Sprite.__init__(self, self.containers)
 		self.text = text
@@ -665,21 +683,8 @@ def main():
 	player1.left = K_a
 	player1.right = K_d
 
-	#def load_pipes(style, direction, filetype):
-	pipe_styles = ['1', '2']
-
-	for style in pipe_styles:
-		Pipe.images[style] = {}
-		for pipe_type in pipe_list:
-			Pipe.images[style][pipe_type] = load_pipes(style, pipe_type, 'png')
-		secondary = other_pipes.keys()
-		for key in secondary:
-			Pipe.images[style][key] = Pipe.images[style][other_pipes[key]]
-
-	#pipes = pygame.sprite.Group()
 	text = pygame.sprite.Group()
 	all = pygame.sprite.Group()
-	#Pipe.containers = pipes, all
 	Text.containers = text, all
 
 	def screen_update(sprites, background=None, bg_rect=None,
@@ -778,7 +783,7 @@ def main():
 		#Refresh screen and draw all the dirty rects.
 		screen_update(all, background, bg_rect)
 
-		#End match, clean up and next level
+		#End match, clean up, and next level
 		if end_match(playerlist):
 			p1score = player1.score
 			p2score = player2.score
