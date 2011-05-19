@@ -164,6 +164,7 @@ class Gameboard():
 	def __init__(self, x, y):
 		self.x = x #Rows
 		self.y = y #Columns
+		self.pipes = []
 		self.new()
 
 	def create_level(self, level):
@@ -361,7 +362,7 @@ class Player():
 			self.currentcell = (row, column)
 			gameboard.add_pipe(self.number, row, column)
 			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
-			Pipe(gameboard.pos(row, column), self.style, "center" + opposite[self.entry])
+			Pipe(gameboard, gameboard.pos(row, column), self.style, "center" + opposite[self.entry])
 
 			#Send player to opposite side of the screen
 			teleport = {"L": ([-1, 0], len(gameboard.grid[0])-1), 
@@ -401,7 +402,7 @@ class Player():
 			self.exit = 'center'
 			#Add end pipe
 			gameboard.add_pipe(self.number, self.previouscell[0], self.previouscell[1]) #add entry, exit?
-			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
+			Pipe(gameboard, gameboard.pos(self.previouscell[0], self.previouscell[1]),
 				 self.style, self.entry + self.exit)
 
 		#Check if row and column are same
@@ -411,24 +412,22 @@ class Player():
 			#Add pipe in previous cell
 			#Pipe(gameboard.pos(self.previouscell), self.style, self.entry + self.exit)
 			gameboard.add_pipe(self.number, self.previouscell[0], self.previouscell[1]) #add entry, exit?
-			Pipe(gameboard.pos(self.previouscell[0], self.previouscell[1]),
+			Pipe(gameboard, gameboard.pos(self.previouscell[0], self.previouscell[1]),
 				 self.style, self.exit + self.entry)
 			self.score += 1
 			self.previouscell = (row, column)
 		
 
-class Pipe(pygame.sprite.Sprite):
+class Pipe():
 	images = {}
 
-	def __init__(self, pos, style, direction):
-		pygame.sprite.Sprite.__init__(self, self.containers)
+	def __init__(self, board, pos, style, direction):
 		self.image = self.images[style][direction]
 		self.rect = self.image.get_rect(topleft=pos)
 		#print "New", direction, "pipe at", pos[0], pos[1]
 
-	def update(self):
-		"""Leave update empty so that Pipe can work as a sprite."""
-		pass
+		#grid[row][col] = Doodad(level_key[key], x, y)
+		board.pipes.append(self)
 
 
 class Text(pygame.sprite.Sprite):
@@ -593,7 +592,7 @@ class prep_timer():
 		"""Run the gameover screen."""
 		loop = True
 		while loop:
-			self.update(sprites, self.prep_img, self.prep_rect)
+			self.update(sprites, None, None, self.prep_img, self.prep_rect)
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					sys.exit()
@@ -677,10 +676,10 @@ def main():
 		for key in secondary:
 			Pipe.images[style][key] = Pipe.images[style][other_pipes[key]]
 
-	pipes = pygame.sprite.Group()
+	#pipes = pygame.sprite.Group()
 	text = pygame.sprite.Group()
 	all = pygame.sprite.Group()
-	Pipe.containers = pipes, all
+	#Pipe.containers = pipes, all
 	Text.containers = text, all
 
 	def screen_update(sprites, background=None, bg_rect=None,
@@ -692,6 +691,8 @@ def main():
 		for item in board.active:
 			screen.blit(item.image, item.rect)
 		sprites.update()
+		for pipe in board.pipes:
+			screen.blit(pipe.image, pipe.rect)
 		if foreground:
 			screen.blit(foreground, fg_rect)
 		dirty = sprites.draw(screen)
