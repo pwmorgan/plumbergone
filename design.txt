@@ -20,6 +20,7 @@ Final Implementation:
 - Professional art.
 - Multiple levels per match.
 - Scoring system.
+- Sound.
 
 Timeline:
 Week 1: Choose the framework
@@ -35,12 +36,16 @@ Week 10: Present Project
 
 Stretch Goals:
 Add interesting game play elements:
+- Artificial intelligence
 - The ability to interact with previous levels of pipes.
 - Transparency to see pipe layer below if you can switch layers.
-- Power-ups
+- Power-ups.
 - Good sound and music.
 - Moving parts.
-- Artificial intelligence
 
-NOTES:
-I could add awareness to the add_pipe function that looks where the pipe is leading and if it is leading into a trap, send the pipe upwards instead.
+Known bugs:
+#Colliding with another player causes overlap.
+Two players can move in the same square
+End pipes wonky now
+#Entering teleport pipes from the side mucks them up
+#Layers not completed

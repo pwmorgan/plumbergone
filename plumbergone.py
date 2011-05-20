@@ -8,7 +8,7 @@ April 2011
 
 An arcade game where you lay down pipes across a variety of environments,
 competing for the glorious job of professional plumber. Features art by
-Royce Mclean and sounds from [source].  Written in python using the
+Royce Mclean and music from [source].  Written in python using the
 pygame framework.
 """
 
@@ -67,6 +67,7 @@ def load_level(level_file):
 	raw_level = file(full_path, 'r')
 	done = False
 	#Parse the raw level file
+	timer_layer = [] #Gate timer storage
 	main_layer = [] #Top art level with collisions
 	while not done:	
 		line = raw_level.readline()
@@ -81,9 +82,13 @@ def load_level(level_file):
 	#Scrub the gameboard lists
 	for row in range(len(main_layer)):
 		for cell in range(len(main_layer[row])):
-			main_layer[row][cell] = main_layer[row][cell][0] 
+			contents = main_layer[row][cell]   
+			if ',' in contents:
+				cell_timer = contents.split(',')
+				timer_layer.append([(row, cell), cell_timer[1]])
+			main_layer[row][cell] = contents[0]
 	raw_level.close()
-	return main_layer #, sub_layer
+	return main_layer, timer_layer #, sub_layer
 
 
 #Sound files
@@ -154,7 +159,14 @@ class Button():
 				
 
 class Options():
-	pass
+	def init(self):
+		pass
+		#Player AI
+		#Volume
+		#Sound/Music
+		#Speed?
+		#Game modes?
+		#Controls
 
 
 #Gameplay Classes
@@ -172,10 +184,10 @@ class Gameboard():
 		"""Load the current level as a list of layers."""
 		#A list of all the power-up keys on the board.
 		self.powerups = ['1', '2', '3', 'C', 'U', 'D', 'L', 'R']
-		grid = load_level('level%d.txt' % level) 
+		grid, self.timers = load_level('level%d.txt' % level) 
 		#self.grid = deepcopy(grid)
 		#Empty lists for the active images on each layer.
-		self.active = []
+		#self.active = []
 		#Convert layer from abstract data to the images for loading.
 		for row in range(len(grid)):
 			for col in range(len(grid[row])):
@@ -185,17 +197,19 @@ class Gameboard():
 					#Add a collision obj on grid.
 					self.grid[row][col] = key #This will be useful for AI and collision detection
 					grid[row][col] = Doodad(level_key[key], x, y)
-					self.active.append(grid[row][col])
+					self.active[row][col] = grid[row][col]
 
 	def new(self, x, y):
 		"""Create a new gameboard using row and column count."""
 		self.grid = []
 		self.pipes = []
+		self.active = []
 		for row in range(y):
 			self.grid.append([])
 			for column in range(x):
 				self.grid[row].append('0')
-		#self.pipes = deepcopy(self.grid)
+		self.pipes = deepcopy(self.grid)
+		self.active = deepcopy(self.grid)
 		self.create_level(level)
 	
 	def pos(self, row=0, column=0):
@@ -236,6 +250,13 @@ class Gameboard():
 			x = self.pos(column = point)
 			x = x[0] + (cell_size / 2)
 			return x
+		elif direction == "both":
+			x = self.pos(column = point[0])
+			x = x[0] + (cell_size / 2)
+			y = self.pos(row = point[1])
+			y = y[1] + (cell_size / 2)
+			return x, y
+			
 
 class Doodad():
 	"""Adds an art item to the screen with an image file and x,y coord."""
@@ -318,8 +339,6 @@ class Player():
 		elif self.previouscell[1] < self.currentcell[1]:
 			self.exit = self.entry
 			self.entry = 'left'
-		else:
-			pass
 			
 	def check_collision(self, x, y, gameboard):
 		"""This function checks a player's position with the border grid
@@ -353,7 +372,9 @@ class Player():
 			#print self.speed, self.velocity
 		elif item == "2":
 			#Give player 3 t-blocks
-			self.tblock += 3
+			#self.tblock += 3
+			self.speed *= .6
+			self.velocity = [self.velocity[0]*.6, self.velocity[1]*.6]
 		elif item == "3":
 			#Power up 3: crazy controls?
 			self.up, self.down = self.down, self.up 
@@ -364,7 +385,7 @@ class Player():
 			self.currentcell = (row, column)
 			gameboard.add_pipe(self.number, row, column)
 			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
-			Pipe(gameboard, gameboard.pos(row, column), self.style, "center" + opposite[self.entry])
+			Pipe(gameboard, gameboard.pos(row, column), self.style, "center" + opposite[self.entry], row, column)
 			self.collision = True
 		elif item in ["R", "U", "D", "L"]:
 			#Create an center facing pipe on one side.
@@ -373,7 +394,7 @@ class Player():
 			self.currentcell = (row, column)
 			gameboard.add_pipe(self.number, row, column)
 			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
-			Pipe(gameboard, gameboard.pos(row, column), self.style, "center" + opposite[self.entry])
+			Pipe(gameboard, gameboard.pos(row, column), self.style, "center" + opposite[self.entry], row, column)
 
 			#Send player to opposite side of the screen
 			teleport = {"L": ([-1, 0], len(gameboard.grid[0])-1), 
@@ -415,7 +436,7 @@ class Player():
 			#Add end pipe
 			gameboard.add_pipe(self.number, self.previouscell[0], self.previouscell[1]) #add entry, exit?
 			Pipe(gameboard, gameboard.pos(self.previouscell[0], self.previouscell[1]),
-				 self.style, self.entry + self.exit)
+				 self.style, self.entry + self.exit, row, column)
 
 		#Check if row and column are same
 		elif self.currentcell != self.previouscell:
@@ -425,7 +446,7 @@ class Player():
 			#Pipe(gameboard.pos(self.previouscell), self.style, self.entry + self.exit)
 			gameboard.add_pipe(self.number, self.previouscell[0], self.previouscell[1]) #add entry, exit?
 			Pipe(gameboard, gameboard.pos(self.previouscell[0], self.previouscell[1]),
-				 self.style, self.exit + self.entry)
+				 self.style, self.exit + self.entry, row, column)
 			self.score += 1
 			self.previouscell = (row, column)
 		
@@ -440,11 +461,15 @@ class Pipe():
 	for pipe in secondary:
 		images[pipe] = other_pipes[pipe]
 
-	def __init__(self, board, pos, style, direction):
+	def __init__(self, board, pos, style, direction, row=0, column=0):
 		direction = self.images[direction]
 		self.image = load_pipes(style, direction, 'png')
 		self.rect = self.image.get_rect(topleft=pos)
-		board.pipes.append(self)
+		#board.pipes.append(self)
+		try:
+			board.pipes[row][column] = self
+		except IndexError:
+			pass
 
 
 class Text(pygame.sprite.Sprite):
@@ -456,12 +481,15 @@ class Text(pygame.sprite.Sprite):
 		self.font = pygame.font.Font(None, 24)
 		self.font.set_italic(0)
 		self.color = Color('white')
+		self.time = 0 #Used by timers
 		self.update()
 		self.rect = self.image.get_rect().move(x, y)
 	
 	def update(self):
 		if self.mode == 'score':
 			msg = "Player %s: %d" % (self.player.number, self.player.score)
+		elif self.mode == 'timer':
+			msg = str(int(self.text) - self.time) 
 		else:
 			msg = self.text
 		self.image = self.font.render(msg, 0, self.color)
@@ -693,11 +721,15 @@ def main():
 		pygame.display.flip()  
 		if background:
 			screen.blit(background, bg_rect)
-		for item in board.active:
-			screen.blit(item.image, item.rect)
+		for row in board.active:
+			for item in row:
+				if item != "0":
+					screen.blit(item.image, item.rect)
 		sprites.update()
-		for pipe in board.pipes:
-			screen.blit(pipe.image, pipe.rect)
+		for row in board.pipes:
+			for pipe in row:
+				if pipe != "0":
+					screen.blit(pipe.image, pipe.rect)
 		if foreground:
 			screen.blit(foreground, fg_rect)
 		dirty = sprites.draw(screen)
@@ -718,6 +750,12 @@ def main():
 	leveltext = Text(500, 20, 'Level ' + str(level))
 	leveltext.rect.centerx = width/2
 	leveltext.font = pygame.font.Font(None, 36)
+	for time in board.timers:
+		location = board.midpoint((time[0][1], time[0][0]), "both")
+		time.append(Text(0, 0, str(time[1])))
+		time[-1].mode = "timer"
+		time[-1].rect.center = location
+		text.add(time[-1])
 	text.add(score1)
 	text.add(score2)
 	text.add(leveltext)
@@ -779,6 +817,18 @@ def main():
 				player.check_pipe(player.roundx, player.roundy, board)
 				#Check for collisions
 				player.collision = player.check_collision(player.roundx, player.roundy, board)
+
+		for timer in range(len(board.timers)):
+			#calculate remaining time
+			board.timers[timer][-1].time = int(playtime)
+			#if remaining time is 0 or less, kill sprite
+			if int(playtime) >= int(board.timers[timer][-1].text):
+				board.timers[timer][-1].kill() #kill sprite 
+				row = board.timers[timer][0][0]
+				column =  board.timers[timer][0][1]
+				board.grid[row][column] = "0" #kill collision object
+				board.active[row][column] = "0" #kill art
+				#remove timer from board.timers
 
 		#Refresh screen and draw all the dirty rects.
 		screen_update(all, background, bg_rect)
