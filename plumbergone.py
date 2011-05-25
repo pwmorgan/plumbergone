@@ -208,7 +208,7 @@ class Gameboard():
 			self.grid.append([])
 			for column in range(x):
 				self.grid[row].append('0')
-		self.pipes = deepcopy(self.grid)
+		#self.pipes = deepcopy(self.grid)
 		self.active = deepcopy(self.grid)
 		self.create_level(level)
 	
@@ -273,7 +273,7 @@ class Player():
 	as well as its position, speed, and score."""
 
 	def __init__(self, number, style, x, y, score, 
-				 image, gameboard, previous_entry):
+				 image, border, gameboard, previous_entry):
 		"""When initializing a player class, you need the player number, pipe
 		sytle, x and y coordinates, player image, the gameboard, and which
 		direction the first player pipe should come from."""
@@ -288,7 +288,9 @@ class Player():
 
 		#Load images
 		self.image = load_image(image)
-		self.image.set_colorkey(white)
+		self.border = load_image(border)
+		self.border_rect = self.border.get_rect()
+		#self.image.set_colorkey(white)
 
 		#Screen placement
 		self.rect = self.image.get_rect()
@@ -465,11 +467,13 @@ class Pipe():
 		direction = self.images[direction]
 		self.image = load_pipes(style, direction, 'png')
 		self.rect = self.image.get_rect(topleft=pos)
-		#board.pipes.append(self)
+		board.pipes.append(self)
+		"""
 		try:
 			board.pipes[row][column] = self
 		except IndexError:
 			pass
+		"""
 
 
 class Text(pygame.sprite.Sprite):
@@ -694,8 +698,8 @@ def main():
 	starty1 = bordery + (cell_size / 2) + cell_size #Starts 2 cells down
 	startx2 = width - startx1
 	starty2 = height - starty1 + cell_size
-	player1 = Player(1, '1', startx1, starty1, p1score, player_image, board, 'left')
-	player2 = Player(2, '2', startx2, starty2, p2score, player_image, board, 'right')
+	player1 = Player(1, '1', startx1, starty1, p1score, player_image, 'border1.png', board, 'left')
+	player2 = Player(2, '2', startx2, starty2, p2score, player_image, 'border2.png', board, 'right')
 	player1.movement([1, 0])
 	player2.movement([-1, 0])
 	playerlist = [player1, player2]
@@ -726,10 +730,14 @@ def main():
 				if item != "0":
 					screen.blit(item.image, item.rect)
 		sprites.update()
+		for pipe in board.pipes:
+			screen.blit(pipe.image, pipe.rect)
+		"""
 		for row in board.pipes:
 			for pipe in row:
 				if pipe != "0":
 					screen.blit(pipe.image, pipe.rect)
+		"""
 		if foreground:
 			screen.blit(foreground, fg_rect)
 		dirty = sprites.draw(screen)
@@ -812,6 +820,11 @@ def main():
 				#Move art to x,y pixels
 				player.rect.centerx = player.roundx
 				player.rect.centery = player.roundy
+				row = board.row(player.roundy)
+				column = board.column(player.roundx)
+				player.border_rect.topleft = board.pos(row, column)
+				#plaryer.board.rect.top = board.
+				screen.blit(player.border, player.border_rect)
 				screen.blit(player.image, player.rect)
 				#Check for pipe adds (collision pipe versus normal pipe)
 				player.check_pipe(player.roundx, player.roundy, board)
