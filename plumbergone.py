@@ -539,7 +539,7 @@ def start_screen(screen):
 		return True
 	
 	#Load Music
-	load_sound('Ooze.wav', 'music')
+	load_sound('Ooze.ogg', 'music')
 	#pygame.mixer.music.play()
 
 	#Load Buttons
@@ -758,7 +758,8 @@ def main():
 	pygame.display.update()  
 	if level == 1:
 		#Load the music
-		song = 'emergence.wav'
+		#Queue Enrolled, Hard Noise, Slipped
+		song = 'Emergence.ogg'
 		load_sound(song, 'music')
 	
 		prep_timer(all, clock, screen, screen_update)
@@ -866,6 +867,7 @@ def main():
 
 		#End match, clean up, and next level
 		if end_match(playerlist):
+			load_sound('TheHall.ogg', 'music')
 			p1score = player1.score
 			p2score = player2.score
 			if level == 10:
