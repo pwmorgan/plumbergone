@@ -17,11 +17,16 @@ pygame framework.
 import os
 import sys
 import pygame
+import random
 from pygame.locals import *
 from copy import deepcopy
 
 #Import game settings       
 from image_files import * 
+from sound_files import *
+
+#Initialize Mixer
+pygame.mixer.init()
 
 #Global Game Settings
 main_dir = os.path.split(os.path.abspath(__file__))[0]
@@ -98,16 +103,23 @@ class dummysound():
 		pass
 
 
-def load_sound(sound):
+def load_sound(sound, sound_type):
 	"""Load a sound and add it to the mixer."""
 	if not pygame.mixer: 
 		return dummysound()
-	sound = os.path.join(main_dir, 'data', sound)
-	try:
-		mixed_sound = pygame.mixer.Sound(sound)
-		return mixed_sound
-	except pygame.error:
-		print ('Warning: unable to load %s.' % sound)
+	if sound_type == 'effect':
+		sound = os.path.join(main_dir, 'sounds', sound)
+		mixer = pygame.mixer.Sound
+		try:
+			mixed_sound = mixer(sound)
+			return mixed_sound
+		except pygame.error:
+			print ('Warning: unable to load %s.' % sound)
+	elif sound_type == 'music':
+		sound = os.path.join(main_dir, 'sounds', 'songs', sound)
+		mixer = pygame.mixer.music.load(sound)
+		pygame.mixer.music.play()
+		return None
 	return dummysound()
 
 
@@ -170,7 +182,7 @@ class Options():
 
 
 #Gameplay Classes
-class Gameboard():
+class Gameboard(object):
 	"""The gameboard class contains logic for storing the current game state 
 	and for detecting collisions. Also contains functions for determining 
 	positions of players."""
@@ -258,7 +270,7 @@ class Gameboard():
 			return x, y
 			
 
-class Doodad():
+class Doodad(object):
 	"""Adds an art item to the screen with an image file and x,y coord."""
 	def __init__(self, image, x, y):
 		self.image = load_image(image)
@@ -268,7 +280,7 @@ class Doodad():
 		self.rect = self.image.get_rect()
 		self.rect.topleft = x, y
 
-class Player():
+class Player(object):
 	"""The Player class contains all the attributes of the player's object
 	as well as its position, speed, and score."""
 
@@ -367,6 +379,7 @@ class Player():
 		item = gameboard.grid[row][column]
 		#Remove collision object
 		gameboard.grid[row][column] = '0'
+		gameboard.active[row][column] = '0'
 		if item == "1":
 			#Increase player speed by 10%
 			self.speed *= 1.4
@@ -453,7 +466,7 @@ class Player():
 			self.previouscell = (row, column)
 		
 
-class Pipe():
+class Pipe(object):
 	"""The Pipe class contains a list of all pipe orientations and creates an appropriate image when called."""
 	images = {}
 	#The following takes data from an file that contains pipe orientations.
@@ -524,6 +537,10 @@ def start_screen(screen):
 	def _options(self):
 		print "Load options."
 		return True
+	
+	#Load Music
+	load_sound('Ooze.wav', 'music')
+	#pygame.mixer.music.play()
 
 	#Load Buttons
 	options = Button(512, 287, 'empty.png', 
@@ -578,7 +595,7 @@ def start_screen(screen):
 
 
 #Game Logic Functions
-class prep_timer():
+class prep_timer(object):
 	"""Countdown in between levels."""
 
 	def __init__(self, sprites, clock, screen, update, mode=''):
@@ -684,7 +701,7 @@ def main():
 	mainloop = True
 	board = Gameboard(cell_count_x, cell_count_y)
 	clock = pygame.time.Clock()
-
+	
 	#Draw the background
 	background_img = load_image('background1.png')
 	bg_rect = Rect(0, 0, width, height)
@@ -732,12 +749,6 @@ def main():
 		sprites.update()
 		for pipe in board.pipes:
 			screen.blit(pipe.image, pipe.rect)
-		"""
-		for row in board.pipes:
-			for pipe in row:
-				if pipe != "0":
-					screen.blit(pipe.image, pipe.rect)
-		"""
 		if foreground:
 			screen.blit(foreground, fg_rect)
 		dirty = sprites.draw(screen)
@@ -746,6 +757,10 @@ def main():
 	#Pause before each level
 	pygame.display.update()  
 	if level == 1:
+		#Load the music
+		song = 'emergence.wav'
+		load_sound(song, 'music')
+	
 		prep_timer(all, clock, screen, screen_update)
 
 	#Set up text
@@ -801,6 +816,9 @@ def main():
 					sys.exit()
 				if keystate[K_r]:
 					level = 0
+					mainloop = False
+				if keystate[K_t]:
+					prep_timer(all, clock, screen, screen_update)
 					mainloop = False
 
 		#Display FPS
