@@ -1,13 +1,13 @@
 LEVEL
-X X X X X X X X X X X X X X X X X X X X X X X X X X X X X
+B B B B B B B B B B B B B B B B B B B B B B B B B B B B B
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 0 0 0 0 0 0 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 0 0 0 0 0 0
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-0 X 0 X 0 X 0 X 0 X 0 X 0 X h X 0 X 0 X 0 X 0 X 0 X 0 X 0
-0 0 0 0 0 0 0 0 0 0 0 0 0 v C v 0 0 0 0 0 0 0 0 0 0 0 0 0
-0 X 0 X 0 X 0 X 0 X 0 X 0 X h X 0 X 0 X 0 X 0 X 0 X 0 X 0
+0 X 0 X 0 X 0 X 0 X 0 X 0 X h,30 X 0 X 0 X 0 X 0 X 0 X 0 X 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 v,30 C v,30 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 X 0 X 0 X 0 X 0 X 0 X 0 X h,30 X 0 X 0 X 0 X 0 X 0 X 0 X 0
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0 X 0
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0

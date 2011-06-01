@@ -8,3 +8,12 @@ sound_effects = {'pipe1':'pipe1.ogg',
 				 'exitpipe':'exit.ogg',
 				 'button':'button.ogg',
 				}
+
+music = {'intro':'Ooze.ogg',
+		 'gameplay':['Emergence.ogg', 
+					 'Enrolled.ogg', 
+					 'HardNoise.ogg',
+					 'Slipped.ogg',
+					],
+		 'end_credits':'TheHall.ogg'
+		}

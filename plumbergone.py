@@ -27,6 +27,7 @@ from sound_files import *
 
 #Initialize Mixer
 pygame.mixer.init()
+pygame.mixer.music.set_volume(0.5)
 
 #Global Game Settings
 main_dir = os.path.split(os.path.abspath(__file__))[0]
@@ -112,6 +113,7 @@ def load_sound(sound, sound_type):
 		mixer = pygame.mixer.Sound
 		try:
 			mixed_sound = mixer(sound)
+			#mixed_sound.play()
 			return mixed_sound
 		except pygame.error:
 			print ('Warning: unable to load %s.' % sound)
@@ -145,18 +147,25 @@ class Button():
 		self.rect.bottomleft = (y, x)
 		self.image = self.up
 		self.clickrect = self.rect #Defaults to containing the rect as the clickable area.
+		self.sound = load_sound(sound_effects['button'], 'effect')
+		self.togglesound = True
 
 	def status(self, screen, pos, click):
 		"""Check whether the button has been clicked."""
 		screen.blit(self.up, self.rect)
 		if self.clickrect.top < pos[1] < self.clickrect.bottom:
 			if self.clickrect.left < pos[0] < self.clickrect.right:
+				if self.togglesound:
+					self.sound.play()
+					self.togglesound = False
 				self.image = self.hover
 				if click:
 					self.on_click()
 					#Return True if a click is detected.
 					return True
 			else:
+				self.sound.stop()
+				self.togglesound = True
 				self.image = self.up
 		else:
 			self.image = self.up
@@ -539,7 +548,8 @@ def start_screen(screen):
 		return True
 	
 	#Load Music
-	load_sound('Ooze.ogg', 'music')
+	
+	load_sound(music['intro'], 'music')
 	#pygame.mixer.music.play()
 
 	#Load Buttons
@@ -759,6 +769,9 @@ def main():
 	if level == 1:
 		#Load the music
 		#Queue Enrolled, Hard Noise, Slipped
+		#for song in music['gameplay']:
+			#queue song
+		#load_sound(music['intro'], 'music')
 		song = 'Emergence.ogg'
 		load_sound(song, 'music')
 	
@@ -867,10 +880,10 @@ def main():
 
 		#End match, clean up, and next level
 		if end_match(playerlist):
-			load_sound('TheHall.ogg', 'music')
 			p1score = player1.score
 			p2score = player2.score
 			if level == 10:
+				load_sound(music['end_credits'], 'music')
 				prep_timer(all, clock, screen, screen_update, 'gameover')
 				level = 0
 				mainloop = False
