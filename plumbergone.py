@@ -410,6 +410,7 @@ class Player(object):
 			gameboard.add_pipe(self.number, row, column)
 			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
 			Pipe(gameboard, gameboard.pos(row, column), self.style, "center" + opposite[self.entry], row, column)
+			self.sound.play()
 			self.collision = True
 		elif item in ["R", "U", "D", "L"]:
 			#Create an center facing pipe on one side.
@@ -419,6 +420,7 @@ class Player(object):
 			gameboard.add_pipe(self.number, row, column)
 			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
 			Pipe(gameboard, gameboard.pos(row, column), self.style, "center" + opposite[self.entry], row, column)
+			self.sound.play()
 
 			#Send player to opposite side of the screen
 			teleport = {"L": ([-1, 0], len(gameboard.grid[0])-1), 
@@ -469,8 +471,8 @@ class Player(object):
 			#Add pipe in previous cell
 			#Pipe(gameboard.pos(self.previouscell), self.style, self.entry + self.exit)
 			gameboard.add_pipe(self.number, self.previouscell[0], self.previouscell[1]) #add entry, exit?
-			Pipe(gameboard, gameboard.pos(self.previouscell[0], self.previouscell[1]),
-				 self.style, self.exit + self.entry, row, column)
+			Pipe(gameboard, gameboard.pos(self.previouscell[0], self.previouscell[1]), self.style, self.exit + self.entry, row, column)
+			self.sound.play()
 			self.score += 1
 			self.previouscell = (row, column)
 		
@@ -727,6 +729,8 @@ def main():
 	starty2 = height - starty1 + cell_size
 	player1 = Player(1, '1', startx1, starty1, p1score, player_image, 'border1.png', board, 'left')
 	player2 = Player(2, '2', startx2, starty2, p2score, player_image, 'border2.png', board, 'right')
+	player1.sound = load_sound(sound_effects['pipe1'], 'effect')
+	player2.sound = load_sound(sound_effects['pipe2'], 'effect')
 	player1.movement([1, 0])
 	player2.movement([-1, 0])
 	playerlist = [player1, player2]
