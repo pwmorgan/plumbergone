@@ -41,7 +41,7 @@ level_key = {'V':'pipes_3_upup.png',  #vertical upup pipe
 			 'B':'black.png',  #horizontal leftleft pipe			 
 			 'v':'gates_upup.png',  #vertical gate
 			 'h':'gates_leftleft.png',  #horizontal gate
-			 'X':'blocks_01.png',  #random collision block
+			 'X':'blocks_03.png',  #random collision block
 			 '1':'powerups_01.png',  #powerup 1
 			 '2':'powerups_02.png',  #powerup 2
 			 '3':'powerups_03.png',  #powerup 3

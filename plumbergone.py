@@ -312,6 +312,13 @@ class Player(object):
 		self.border = load_image(border)
 		self.border_rect = self.border.get_rect()
 		#self.image.set_colorkey(white)
+		
+		#Load sounds
+		self.pipesound = dummysound() #load_sound(sound_effects['button'], 'effect')
+		self.collisionsound = load_sound(sound_effects['powerdown'], 'effect') 
+		self.teleportsound = load_sound(sound_effects['pipe1'], 'effect')
+		self.powersound = load_sound(sound_effects['powerup'], 'effect')
+		self.exitsound = load_sound(sound_effects['exitpipe'], 'effect')
 
 		#Screen placement
 		self.rect = self.image.get_rect()
@@ -390,29 +397,34 @@ class Player(object):
 		gameboard.grid[row][column] = '0'
 		gameboard.active[row][column] = '0'
 		if item == "1":
+			self.powersound.play()
 			#Increase player speed by 10%
 			self.speed *= 1.4
 			self.velocity = [self.velocity[0]*1.4, self.velocity[1]*1.4]
 			#print self.speed, self.velocity
 		elif item == "2":
+			self.powersound.play()
 			#Give player 3 t-blocks
 			#self.tblock += 3
 			self.speed *= .6
 			self.velocity = [self.velocity[0]*.6, self.velocity[1]*.6]
 		elif item == "3":
+			self.powersound.play()
 			#Power up 3: crazy controls?
 			self.up, self.down = self.down, self.up 
 			self.left, self.right = self.right, self.left
 		elif item == "C":
+			self.exitsound.play()
 			#Final pipe
 			self.score += 100
 			self.currentcell = (row, column)
 			gameboard.add_pipe(self.number, row, column)
 			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
 			Pipe(gameboard, gameboard.pos(row, column), self.style, "center" + opposite[self.entry], row, column)
-			self.sound.play()
+			self.pipesound.play()
 			self.collision = True
 		elif item in ["R", "U", "D", "L"]:
+			self.teleportsound.play()
 			#Create an center facing pipe on one side.
 			#row = gameboard.row(self.y)
 			#column = gameboard.column(self.x)
@@ -420,7 +432,7 @@ class Player(object):
 			gameboard.add_pipe(self.number, row, column)
 			opposite = {'up':'down', 'down':'up', 'left':'right', 'right':'left'}
 			Pipe(gameboard, gameboard.pos(row, column), self.style, "center" + opposite[self.entry], row, column)
-			self.sound.play()
+			self.pipesound.play()
 
 			#Send player to opposite side of the screen
 			teleport = {"L": ([-1, 0], len(gameboard.grid[0])-1), 
@@ -457,6 +469,7 @@ class Player(object):
 	
 		#Check for collision
 		if self.collision:
+			self.collisionsound.play()
 			#self.record_entry()
 			self.exit = 'center'
 			#Add end pipe
@@ -472,7 +485,7 @@ class Player(object):
 			#Pipe(gameboard.pos(self.previouscell), self.style, self.entry + self.exit)
 			gameboard.add_pipe(self.number, self.previouscell[0], self.previouscell[1]) #add entry, exit?
 			Pipe(gameboard, gameboard.pos(self.previouscell[0], self.previouscell[1]), self.style, self.exit + self.entry, row, column)
-			self.sound.play()
+			self.pipesound.play()
 			self.score += 1
 			self.previouscell = (row, column)
 		
@@ -625,11 +638,11 @@ class prep_timer(object):
 		self.lines = []
 		if mode == 'gameover':
 			if p1score > p2score:
-				winner = 'Player 1 wins!'
+				winner = 'Green wins!'
 			elif p1score == p2score:
 				winner = 'Tie!'
 			else:
-				winner = 'Player 2 wins!'
+				winner = 'Orange wins!'
 			self.line1 = Text(500, 225, 'Game over')
 			self.line2 = Text(500, 265, winner)
 			self.lines.append(self.line1)
@@ -696,7 +709,8 @@ def end_match(players):
 def main():
 	#Game Initialization
 	pygame.init()
-	screen = pygame.display.set_mode(size) #,pygame.FULLSCREEN)
+	screen = pygame.display.set_mode(size) #pygame.FULLSCREEN)
+	pygame.display.set_caption("Plumbergone")
 	global level
 	global p1score
 	global p2score
@@ -715,7 +729,13 @@ def main():
 	clock = pygame.time.Clock()
 	
 	#Draw the background
-	background_img = load_image('background1.png')
+	if level <= 3:
+		backdrop = 'background3.png'
+	elif level <= 6:
+		backdrop = 'background2.png'
+	else:
+		backdrop = 'background1.png'
+	background_img = load_image(backdrop)
 	bg_rect = Rect(0, 0, width, height)
 	background = pygame.Surface((width, height))
 	background.blit(background_img, (0, 0))
@@ -729,8 +749,8 @@ def main():
 	starty2 = height - starty1 + cell_size
 	player1 = Player(1, '1', startx1, starty1, p1score, player_image, 'border1.png', board, 'left')
 	player2 = Player(2, '2', startx2, starty2, p2score, player_image, 'border2.png', board, 'right')
-	player1.sound = load_sound(sound_effects['pipe1'], 'effect')
-	player2.sound = load_sound(sound_effects['pipe2'], 'effect')
+	#player1.sound = dummysound() #load_sound(sound_effects['button'], 'effect')
+	#player2.sound = dummysound() #load_sound(sound_effects['button'], 'effect')
 	player1.movement([1, 0])
 	player2.movement([-1, 0])
 	playerlist = [player1, player2]
@@ -770,15 +790,12 @@ def main():
 
 	#Pause before each level
 	pygame.display.update()  
-	if level == 1:
-		#Load the music
-		#Queue Enrolled, Hard Noise, Slipped
-		#for song in music['gameplay']:
-			#queue song
-		#load_sound(music['intro'], 'music')
-		song = 'Emergence.ogg'
-		load_sound(song, 'music')
 	
+	#Load the music
+	song = random.choice(music['gameplay'])
+	load_sound(song, 'music')
+
+	if level == 1:
 		prep_timer(all, clock, screen, screen_update)
 
 	#Set up text
@@ -839,9 +856,9 @@ def main():
 					prep_timer(all, clock, screen, screen_update)
 					mainloop = False
 
-		#Display FPS
-		pygame.display.set_caption("Plumbergone . [FPS]: %.2f"
-								   % clock.get_fps())
+		#Display caption
+		#pygame.display.set_caption("Plumbergone . [FPS]: %.2f"
+		#						   % clock.get_fps())
 
 		#Calculate player movement for each player.
 		for player in playerlist:
@@ -884,6 +901,15 @@ def main():
 
 		#End match, clean up, and next level
 		if end_match(playerlist):
+			pygame.mixer.music.fadeout(3000)
+			#Pause for a second
+			time = 0
+			pause = 1
+			while time < pause:
+				milliseconds = clock.tick(FPS)
+				countdown = int(1 + pause - time)
+				time += milliseconds / 1000.0
+				screen_update(all, background, bg_rect)
 			p1score = player1.score
 			p2score = player2.score
 			if level == 10:
