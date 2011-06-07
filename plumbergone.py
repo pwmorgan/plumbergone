@@ -8,8 +8,8 @@ April 2011
 
 An arcade game where you lay down pipes across a variety of environments,
 competing for the glorious job of professional plumber. Features art by
-Royce Mclean and music from [source].  Written in python using the
-pygame framework.
+Royce Mclean and music from Matthew A McFarland. Also includes sound 
+effects from opengameart.org.  Written in python using the pygame framework.
 """
 
 
