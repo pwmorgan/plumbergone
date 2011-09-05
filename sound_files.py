@@ -9,11 +9,10 @@ sound_effects = {'pipe1':'pipe1.ogg',
 				 'button':'button.ogg',
 				}
 
-music = {'intro':'Ooze.ogg',
-		 'gameplay':['Emergence.ogg', 
-					 'Enrolled.ogg', 
-					 'HardNoise.ogg',
-					 'Slipped.ogg',
+music = {'intro':'bgm04-c.wav',
+		 'gameplay':['bgm01-c.wav', 
+			     'bgm02-c.wav', 
+			     'bgm03-c.wav',
 					],
-		 'end_credits':'TheHall.ogg'
+		 'end_credits':'bgm04-c.wav'
 		}
