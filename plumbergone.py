@@ -8,7 +8,7 @@ April 2011
 
 An arcade game where you lay down pipes across a variety of environments,
 competing for the glorious job of professional plumber. Features art by
-Royce Mclean and music from Matthew A McFarland. Also includes sound 
+Royce Mclean and music by Kevin Sohn. Also includes sound 
 effects from opengameart.org.  Written in python using the pygame framework.
 """
 
@@ -137,14 +137,14 @@ def round(decimal):
 
 
 #UI Classes
-class Button():
+class Button(object):
 	"""The button class controls the different states of the button image as well as the click event."""
 	def __init__(self, x, y, up='empty.png', hover='empty.png', down='empty.png'):
 		self.up = load_image(up)
 		self.hover = load_image(hover)
 		self.down = load_image(down)
 		self.rect = self.down.get_rect()
-		self.rect.bottomleft = (y, x)
+		self.rect.bottomleft = (x, y)
 		self.image = self.up
 		self.clickrect = self.rect #Defaults to containing the rect as the clickable area.
 		self.sound = load_sound(sound_effects['button'], 'effect')
@@ -176,18 +176,141 @@ class Button():
 	def on_click(self):
 		"""Play the click animation and run the button action."""
 		self.image = self.down
-		self.action(self)
+		self.action()
+
+
+class Slider(Button):
+	def drag(self):
+		pass
 				
 
-class Options():
-	def init(self):
+class Options(object):
+	def __init__(self, screen):
+		self.options_loop = True
+
+		music = Slider(332, 164, 'options/slider_handle.png', 
+                       'options/slider_handle_hover.png', 
+					   'options/slider_handle.png') 
+		effects = Slider(529, 164, 'options/slider_handle.png', 
+                       'options/slider_handle_hover.png', 
+					   'options/slider_handle.png') 
+		green_ai = Button(450, 267, 'options/green_ai.png', 
+                       'options/green_ai_hover.png', 
+				       'options/green_ai.png') 
+		green_human = Button(383, 267, 'options/green_human.png', 
+                       'options/green_human_hover.png', 
+					   'options/green_human.png') 
+		red_ai = Button(660, 267, 'options/red_ai.png', 
+                       'options/red_ai_hover.png', 
+					   'options/red_ai.png') 
+		red_human = Button(594, 267, 'options/red_human.png', 
+                       'options/red_human_hover.png', 
+					   'options/red_human.png') 
+		red_up = Button(608, 369, 'options/red_up_key.png', 
+                       'options/red_up_key_hover.png', 
+					   'options/red_up_key.png') 
+		red_down = Button(608, 406, 'options/red_down_key.png', 
+                       'options/red_down_key_hover.png', 
+					   'options/red_down_key.png') 
+		red_left = Button(570, 406, 'options/red_left_key.png', 
+                       'options/red_left_key_hover.png', 
+					   'options/red_left_key.png') 
+		red_right = Button(646, 406, 'options/red_right_key.png', 
+                       'options/red_right_key_hover.png', 
+					   'options/red_right_key.png') 
+		green_up = Button(380, 369, 'options/green_up_key.png', 
+                       'options/green_up_key_hover.png', 
+					   'options/green_up_key.png') 
+		green_down = Button(380, 406, 'options/green_down_key.png', 
+                       'options/green_down_key_hover.png', 
+					   'options/green_down_key.png') 
+		green_left = Button(342, 406, 'options/green_left_key.png', 
+                       'options/green_left_key_hover.png', 
+					   'options/green_left_key.png') 
+		green_right = Button(418, 406, 'options/green_right_key.png', 
+                       'options/green_right_key_hover.png', 
+					   'options/green_right_key.png') 
+		save = Button(422, 482, 'options/save.png', 
+                       'options/save_hover.png', 
+					   'options/save.png') 
+		cancel = Button(515, 481, 'options/cancel.png', 
+                       'options/cancel_hover.png', 
+					   'options/cancel.png') 
+
+		music.action = self._pass
+		effects.action = self._pass
+		green_ai.action = self._pass
+		green_human.action = self._pass
+		red_ai.action = self._pass
+		red_human.action = self._pass
+		red_up.action = self._pass
+		red_down.action = self._pass
+		red_left.action = self._pass
+		red_right.action = self._pass
+		green_up.action = self._pass
+		green_down.action = self._pass
+		green_left.action = self._pass
+		green_right.action = self._pass
+		save.action = self._pass
+		cancel.action = self._cancel
+
+		self.buttons = [music, effects, save, cancel,
+                   green_ai, green_human, red_ai, red_human, 
+                   red_up, red_down, red_left, red_right,
+				   green_up, green_down, green_left, green_right,
+                   ]
+
+		self.loop(screen)
+
+	def _pass(self):
 		pass
-		#Player AI
-		#Volume
-		#Sound/Music
-		#Speed?
-		#Game modes?
-		#Controls
+
+    	"""
+	def	music
+	def	effects
+	def	green_ai
+	def	green_human
+	def	red_ai
+	def	red_human
+	def	red_up
+	def	red_down
+	def	red_left
+	def	red_right
+	def	green_up
+	def	green_down
+	def	green_left
+	def	green_right
+	def	save
+		"""
+	def	_cancel(self):
+		self.options_loop = False
+
+	def loop(self, screen):
+		screen = screen
+		background_img = load_image('options/options_bg.png', None)
+		bg_rect = Rect(0, 0, width, height)
+		background = pygame.Surface((width, height))
+		background.blit(background_img, (0, 0))
+		screen.blit(background, (0,0))
+
+		while self.options_loop:
+			#Store the Mouse Position
+			pos = pygame.mouse.get_pos()
+
+			#Render Screen
+			pygame.display.flip()  
+			screen.blit(background, bg_rect)
+
+			#Check for Mouse Events
+			for event in pygame.event.get():
+				if event.type == pygame.MOUSEBUTTONDOWN:
+					for button in self.buttons:
+						button.status(screen, pos, True)
+
+			#Load buttons
+			for button in self.buttons:
+				button.status(screen, pos, False)
+				screen.blit(button.image, button.rect)
 
 
 #Gameplay Classes
@@ -537,86 +660,87 @@ class Text(pygame.sprite.Sprite):
 
 
 #Make this a class?
-def start_screen(screen):
-	#Start Screen settings
-	screen = screen
-	background_img = load_image('startscreen1.png', None)
-	bg_rect = Rect(0, 0, width, height)
-	background = pygame.Surface((width, height))
-	background.blit(background_img, (0, 0))
-	screen.blit(background, (0,0))
+class start_screen(object):
 
-	#Reset the scores at the beginning of each game.
-	global p1score
-	global p2score
-	p1score = 0
-	p2score = 0
-	
+	def __init__(self, screen):
+		#Reset the scores at the beginning of each game.
+		self.screen = screen
+		global p1score
+		global p2score
+		p1score = 0
+		p2score = 0
+		
+		#Load Music
+		
+		load_sound(music['intro'], 'music')
+		#pygame.mixer.music.play()
+
+		#Load Buttons
+		self.options = Button(287, 512, 'empty.png', 
+						 'options_on.png', 'options_on.png') 
+		self.newgame = Button(0, 512, 'empty.png', 
+						 'newgame_on.png', 'newgame_on.png') 
+		self.quit = Button(640, 512, 'empty.png', 
+					  'quit_on.png', 'quit_on.png') 
+		self.newgame.clickrect = Rect((0, 208), (287, 304))
+		self.options.clickrect = Rect((287, 256), (352, 256))
+		self.quit.clickrect = Rect((640,225), (384,287))
+		self.newgame.start = False
+		self.newgame.action = self._newgame
+		self.options.action = self._options
+		self.quit.action = self._quit
+		self.buttons = [self.newgame, self.options, self.quit]
+
+		self.menu_loop = True
+		self.loop(self.screen)
+
 	def _quit(self):
 		sys.exit()
 	
 	def _newgame(self):
-		self.start = True
+		self.menu_loop = False
 
 	def _options(self):
-		print "Load options."
-		return True
+		Options(self.screen)
+		#print "Load options."
+		#return True
 	
-	#Load Music
-	
-	load_sound(music['intro'], 'music')
-	#pygame.mixer.music.play()
+	def loop(self, screen):
+		#Start Screen settings
+		background_img = load_image('startscreen1.png', None)
+		bg_rect = Rect(0, 0, width, height)
+		background = pygame.Surface((width, height))
+		background.blit(background_img, (0, 0))
+		screen.blit(background, (0,0))
 
-	#Load Buttons
-	options = Button(512, 287, 'empty.png', 
-                     'options_on.png', 'options_on.png') 
-	newgame = Button(512, 0, 'empty.png', 
-                     'newgame_on.png', 'newgame_on.png') 
-	quit = Button(512, 640, 'empty.png', 
-                  'quit_on.png', 'quit_on.png') 
-	newgame.clickrect = Rect((0, 208), (287, 304))
-	options.clickrect = Rect((287, 256), (352, 256))
-	quit.clickrect = Rect((640,225), (384,287))
-	newgame.start = False
-	newgame.action = _newgame
-	options.action = _options
-	quit.action = _quit
-	buttons = [newgame, options, quit]
-	menu_loop = True
+		while self.menu_loop:
+			#Mouse Status
+			pos = pygame.mouse.get_pos()
 
-	while menu_loop:
-		#Mouse Status
-		pos = pygame.mouse.get_pos()
-
-		#Screen Events
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				sys.exit()
-			if event.type == pygame.KEYDOWN:
-				keystate = pygame.key.get_pressed()
-				if keystate[K_q]:
+			#Screen Events
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
 					sys.exit()
-				if keystate[K_n]:
-					return False
-				if keystate[K_o]:
-					#TODO add options panel
-					pass
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				for button in buttons:
-					button.status(screen, pos, True)
+				if event.type == pygame.KEYDOWN:
+					keystate = pygame.key.get_pressed()
+					if keystate[K_q]:
+						sys.exit()
+					if keystate[K_n]:
+						return False
+					if keystate[K_o]:
+						#TODO add options panel
+						pass
+				if event.type == pygame.MOUSEBUTTONDOWN:
+					for button in self.buttons:
+						button.status(screen, pos, True)
 
-		#Load buttons
-		for button in buttons:
-			button.status(screen, pos, False)
-			screen.blit(button.image, button.rect)
+			#Load buttons
+			for button in self.buttons:
+				button.status(screen, pos, False)
+				screen.blit(button.image, button.rect)
 
-		if newgame.start:
-			return False
-
-		pygame.display.flip()  
-		screen.blit(background, bg_rect)
-
-	return True
+			pygame.display.flip()  
+			screen.blit(background, bg_rect)
 
 
 #Game Logic Functions
@@ -718,8 +842,7 @@ def main():
 	menu = True
 
 	if level == 0:
-		while menu:
-			menu = start_screen(screen)
+		start_screen(screen)
 		level += 1
 
 	#Game init
